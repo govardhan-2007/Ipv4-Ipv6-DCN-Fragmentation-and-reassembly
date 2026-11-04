@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Knowledge check | DCN Virtual Laboratory</title>
+<meta name="theme-color" content="#0b1030">
+<meta name="description" content="Experiment 05: IPv6 fragmentation and reassembly virtual laboratory (DCN V-Lab).">
+<script>
+  (function () {
+    try {
+      var savedTheme = localStorage.getItem('dcn-vlab-theme');
+      document.documentElement.setAttribute('data-theme', savedTheme === 'dark' ? 'dark' : 'light');
+    } catch (error) {
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+  }());
+</script>
+<link rel="stylesheet" href="css/lab.css">
+<link rel="stylesheet" href="css/v6.css">
+</head>
+<body data-page="quiz">
+<a class="skip-link" href="#main">Skip to content</a>
+<noscript><p class="noscript">This virtual lab needs JavaScript. Please enable it in your browser.</p></noscript>
+
+<div class="app" id="app">
+
+  <nav class="sidebar" id="sidebar" aria-label="Lab sections">
+    <a class="brand" href="index.html" aria-label="IPv6 experiment overview">
+      <span class="brand-mark" aria-hidden="true"><span></span></span>
+      <span class="brand-text"><strong>DCN <b>V-LAB</b></strong><small>Engineering learning environment</small></span>
+    </a>
+    <div class="sidebar-course">
+      <span class="sidebar-course-label">Course module</span>
+      <strong>Data Communication<br>&amp; Networking</strong>
+      <span class="sidebar-course-meta">Network layer <i></i> Experiment 05 · IPv6</span>
+    </div>
+    <ul class="nav-list">
+      <li class="nav-label">Learn</li>
+      <li><a class="nav-btn" data-index="01" href="index.html">Overview</a></li>
+      <li><a class="nav-btn" data-index="02" href="theory.html">Theory and concepts</a></li>
+      <li class="nav-label">Experiment workspace</li>
+      <li><a class="nav-btn" data-index="03" href="setup.html">Packet configuration</a></li>
+      <li><a class="nav-btn" data-index="04" href="simulation.html">Live simulation</a></li>
+      <li><a class="nav-btn" data-index="05" href="headers.html">Packet header inspector</a></li>
+      <li><a class="nav-btn" data-index="06" href="reassembly.html">Reassembly lab</a></li>
+      <li><a class="nav-btn" data-index="07" href="results.html">Results and analysis</a></li>
+      <li class="nav-label">Assessment</li>
+      <li><a class="nav-btn active" data-index="08" href="quiz.html" aria-current="page">Knowledge check</a></li>
+      <li class="nav-label">Other experiment</li>
+      <li><a class="nav-btn nav-btn-ext" data-index="E4" href="../index.html">IPv4 fragmentation lab <span class="nav-external-mark" aria-hidden="true">↗</span></a></li>
+    </ul>
+    <div class="sidebar-foot">
+      <span class="sidebar-foot-mark" aria-hidden="true">✓</span>
+      <div><strong>Ready for self-study</strong><small>Runs in a modern browser</small></div>
+    </div>
+  </nav>
+
+  <button class="menu-toggle" id="menu-toggle" aria-controls="sidebar" aria-expanded="false">Menu</button>
+
+  <main class="content" id="main" tabindex="-1">
+    <header class="portal-header" aria-label="Virtual laboratory header">
+      <div class="portal-breadcrumb">
+        <span class="portal-brand-tag">V-LAB</span>
+        <span class="breadcrumb-course">Data Communication &amp; Networking</span>
+        <span class="breadcrumb-separator" aria-hidden="true">/</span>
+        <strong id="portal-page-name">Knowledge check</strong>
+      </div>
+      <div class="portal-actions">
+        <button class="cmdk-hint" id="cmdk-open" type="button" aria-label="Jump to a page (Ctrl or Command + K)">Jump to <kbd>Ctrl K</kbd></button>
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to dark mode" title="Switch to dark mode">
+          <span class="theme-toggle-symbol" aria-hidden="true">☾</span>
+          <span class="theme-toggle-label">Dark mode</span>
+          <span class="theme-toggle-track" aria-hidden="true"><span></span></span>
+        </button>
+        <div class="portal-status"><span class="portal-status-dot" aria-hidden="true"></span><span>Interactive module</span><i></i><span>Experiment 05</span></div>
+      </div>
+      <div class="reading-progress" id="reading-progress" aria-hidden="true"><span id="reading-progress-fill"></span></div>
+    </header>
+
+    <section class="lab-section active" id="sec-quiz" aria-labelledby="h-page">
+
+      <h1 id="h-page">Knowledge check</h1>
+      <article class="card quiz-card" id="quiz-card">
+        <div id="quiz-run">
+          <div class="quiz-progress" id="quiz-progress">Question 1 of 10</div>
+          <progress id="quiz-bar" max="10" value="0" aria-label="Quiz progress"></progress>
+          <h2 class="quiz-q" id="quiz-q" style="margin-top:18px"></h2>
+          <div class="quiz-options" id="quiz-options"></div>
+          <div class="quiz-feedback" id="quiz-feedback" aria-live="polite"></div>
+          <div class="btn-row"><button class="btn primary" type="button" id="quiz-next" disabled>Next question →</button></div>
+        </div>
+        <div id="quiz-done" hidden>
+          <div class="quiz-progress">Quiz complete</div>
+          <div class="quiz-score" id="quiz-score"></div>
+          <p id="quiz-summary"></p>
+          <button class="btn primary" type="button" id="quiz-retry">Try again with new questions</button>
+        </div>
+      </article>
+    </section>
+
+    <footer class="portal-footer">
+      <div><span class="footer-mark" aria-hidden="true">V</span><div><strong>DCN Virtual Laboratory</strong><small>Experiment 05 · IPv6 Fragmentation &amp; Reassembly</small></div></div>
+      <span class="footer-note"><a href="../index.html">Experiment 04 · IPv4</a> · Runs locally in your browser</span>
+    </footer>
+  </main>
+</div>
+<script src="js/model.js"></script>
+<script src="js/shell.js"></script>
+<script src="js/voice.js"></script>
+<script src="js/v6.js"></script>
+</body>
+</html>

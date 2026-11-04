@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Live simulation | DCN Virtual Laboratory</title>
+<meta name="theme-color" content="#0b1030">
+<meta name="description" content="Experiment 05: IPv6 fragmentation and reassembly virtual laboratory (DCN V-Lab).">
+<script>
+  (function () {
+    try {
+      var savedTheme = localStorage.getItem('dcn-vlab-theme');
+      document.documentElement.setAttribute('data-theme', savedTheme === 'dark' ? 'dark' : 'light');
+    } catch (error) {
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+  }());
+</script>
+<link rel="stylesheet" href="css/lab.css">
+<link rel="stylesheet" href="css/v6.css">
+</head>
+<body data-page="simulation">
+<a class="skip-link" href="#main">Skip to content</a>
+<noscript><p class="noscript">This virtual lab needs JavaScript. Please enable it in your browser.</p></noscript>
+
+<div class="app" id="app">
+
+  <nav class="sidebar" id="sidebar" aria-label="Lab sections">
+    <a class="brand" href="index.html" aria-label="IPv6 experiment overview">
+      <span class="brand-mark" aria-hidden="true"><span></span></span>
+      <span class="brand-text"><strong>DCN <b>V-LAB</b></strong><small>Engineering learning environment</small></span>
+    </a>
+    <div class="sidebar-course">
+      <span class="sidebar-course-label">Course module</span>
+      <strong>Data Communication<br>&amp; Networking</strong>
+      <span class="sidebar-course-meta">Network layer <i></i> Experiment 05 · IPv6</span>
+    </div>
+    <ul class="nav-list">
+      <li class="nav-label">Learn</li>
+      <li><a class="nav-btn" data-index="01" href="index.html">Overview</a></li>
+      <li><a class="nav-btn" data-index="02" href="theory.html">Theory and concepts</a></li>
+      <li class="nav-label">Experiment workspace</li>
+      <li><a class="nav-btn" data-index="03" href="setup.html">Packet configuration</a></li>
+      <li><a class="nav-btn active" data-index="04" href="simulation.html" aria-current="page">Live simulation</a></li>
+      <li><a class="nav-btn" data-index="05" href="headers.html">Packet header inspector</a></li>
+      <li><a class="nav-btn" data-index="06" href="reassembly.html">Reassembly lab</a></li>
+      <li><a class="nav-btn" data-index="07" href="results.html">Results and analysis</a></li>
+      <li class="nav-label">Assessment</li>
+      <li><a class="nav-btn" data-index="08" href="quiz.html">Knowledge check</a></li>
+      <li class="nav-label">Other experiment</li>
+      <li><a class="nav-btn nav-btn-ext" data-index="E4" href="../index.html">IPv4 fragmentation lab <span class="nav-external-mark" aria-hidden="true">↗</span></a></li>
+    </ul>
+    <div class="sidebar-foot">
+      <span class="sidebar-foot-mark" aria-hidden="true">✓</span>
+      <div><strong>Ready for self-study</strong><small>Runs in a modern browser</small></div>
+    </div>
+  </nav>
+
+  <button class="menu-toggle" id="menu-toggle" aria-controls="sidebar" aria-expanded="false">Menu</button>
+
+  <main class="content" id="main" tabindex="-1">
+    <header class="portal-header" aria-label="Virtual laboratory header">
+      <div class="portal-breadcrumb">
+        <span class="portal-brand-tag">V-LAB</span>
+        <span class="breadcrumb-course">Data Communication &amp; Networking</span>
+        <span class="breadcrumb-separator" aria-hidden="true">/</span>
+        <strong id="portal-page-name">Live simulation</strong>
+      </div>
+      <div class="portal-actions">
+        <button class="cmdk-hint" id="cmdk-open" type="button" aria-label="Jump to a page (Ctrl or Command + K)">Jump to <kbd>Ctrl K</kbd></button>
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to dark mode" title="Switch to dark mode">
+          <span class="theme-toggle-symbol" aria-hidden="true">☾</span>
+          <span class="theme-toggle-label">Dark mode</span>
+          <span class="theme-toggle-track" aria-hidden="true"><span></span></span>
+        </button>
+        <div class="portal-status"><span class="portal-status-dot" aria-hidden="true"></span><span>Interactive module</span><i></i><span>Experiment 05</span></div>
+      </div>
+      <div class="reading-progress" id="reading-progress" aria-hidden="true"><span id="reading-progress-fill"></span></div>
+    </header>
+
+    <section class="lab-section active" id="sec-simulation" aria-labelledby="h-page" data-sim-state="idle">
+
+      <h1 id="h-page">Interactive simulation</h1>
+
+      <div class="sim-summary" id="sim-summary" aria-label="Parameters of this run"></div>
+
+      <div class="sim-bar" role="toolbar" aria-label="Simulation controls">
+        <div class="sim-transport">
+          <button class="btn primary" type="button" id="btn-sim-start" title="Start from the beginning (Space)"><span class="ico-btn" aria-hidden="true">▶</span>Start</button>
+          <button class="btn" type="button" id="btn-sim-pause" title="Pause (Space)"><span class="ico-btn" aria-hidden="true">❚❚</span>Pause</button>
+          <button class="btn" type="button" id="btn-sim-resume" title="Resume playback (Space)"><span class="ico-btn" aria-hidden="true">⏵</span>Resume</button>
+          <button class="btn" type="button" id="btn-sim-step" title="Play one stage at a time (→)"><span class="ico-btn" aria-hidden="true">⏭</span>Step</button>
+          <button class="btn" type="button" id="btn-sim-reset" title="Clear the stage (R)"><span class="ico-btn" aria-hidden="true">⟲</span>Reset</button>
+        </div>
+        <div class="speed" role="group" aria-label="Playback speed">
+          <span class="speed-label">Speed</span>
+          <div class="speed-presets">
+            <button type="button" data-speed="0.5" aria-label="Half speed">0.5×</button>
+            <button type="button" data-speed="1" aria-label="Normal speed">1×</button>
+            <button type="button" data-speed="2" aria-label="Double speed">2×</button>
+          </div>
+          <input type="range" id="sim-speed" min="0.25" max="3" step="0.25" value="1" aria-label="Playback speed">
+          <output id="sim-speed-val">1×</output>
+        </div>
+      </div>
+
+      <div class="sim-now" aria-live="polite">
+        <span class="stage-chip" id="sim-stage">Ready</span>
+        <p class="status-line"><strong id="sim-status">Ready. Press Start, or Step to go one stage at a time.</strong></p>
+      </div>
+      <progress id="sim-progress" max="100" value="0" aria-label="Simulation progress"></progress>
+      <ol class="sim-stepper" id="sim-stepper" aria-label="Simulation stages"></ol>
+
+      <div class="topology-frame">
+      <figure class="topology">
+        <svg id="topology" viewBox="0 40 900 240" role="img" aria-label="Network topology: source, router, destination">
+          <line id="link-a" x1="150" y1="150" x2="390" y2="150" class="wire"/>
+          <line id="link-b" x1="510" y1="150" x2="750" y2="150" class="wire"/>
+          <text x="270" y="236" class="link-label" id="label-link-a">Link A: MTU 9000</text>
+          <text x="630" y="236" class="link-label" id="label-link-b">Link B: Path MTU 1500</text>
+
+          <g id="node-source" class="node n-source"><rect class="base" x="30" y="100" width="120" height="100" rx="14"/><g class="ico" transform="translate(90 128)"><rect x="-15" y="-11" width="30" height="20" rx="3"/><path d="M-7 14h14M0 9v5"/></g><text x="90" y="162" class="nm">Source</text><text x="90" y="182" class="ip">2001:db8:1::10</text></g>
+          <g id="node-router" class="node n-router"><rect class="base" x="390" y="100" width="120" height="100" rx="14"/><g class="ico" transform="translate(450 130)"><rect x="-16" y="-3" width="32" height="13" rx="3"/><path d="M-9 -3l-4-10M9 -3l4-10"/><circle cx="-7" cy="3.5" r="1.4"/><circle cx="-1" cy="3.5" r="1.4"/></g><text x="450" y="162" class="nm">Router</text><text x="450" y="182" class="ip">2001:db8:1::1</text></g>
+          <g id="node-dest" class="node n-dest"><rect class="base" x="750" y="100" width="120" height="100" rx="14"/><g class="ico" transform="translate(810 128)"><rect x="-14" y="-13" width="28" height="11" rx="2"/><rect x="-14" y="1" width="28" height="11" rx="2"/><circle cx="-8" cy="-7.5" r="1.3"/><circle cx="-8" cy="6.5" r="1.3"/></g><text x="810" y="162" class="nm">Destination</text><text x="810" y="182" class="ip">2001:db8:2::20</text></g>
+
+          <text x="450" y="80" class="router-check" id="router-check" text-anchor="middle"></text>
+          <g id="buffer-layer"></g>
+          <g id="packet-layer"></g>
+          <g id="icmp-layer"></g>
+        </svg>
+        <figcaption id="topology-caption">Packets appear here during the simulation.</figcaption>
+      </figure>
+      </div>
+
+      <div class="sim-next" id="sim-next" hidden>
+        <div><strong>Run complete.</strong> <span id="sim-next-text">Continue the experiment:</span></div>
+        <div class="btn-row" id="sim-next-actions"></div>
+      </div>
+
+      <div class="frag-tray" id="frag-tray" aria-label="Fragments created by the source" hidden>
+        <div class="tray-head"><h2>Fragments</h2><span class="tray-hint" id="tray-hint">Waiting for the source to fragment the packet.</span></div>
+        <ul class="tray-list" id="tray-list"></ul>
+      </div>
+
+      <p class="shortcut-hint">Shortcuts: <kbd>Space</kbd> start, pause or resume &nbsp; <kbd>→</kbd> step &nbsp; <kbd>R</kbd> reset</p>
+      <p class="hint">Teaching model: after Packet Too Big the source resends the data as fragments. Real TCP usually lowers its segment size instead; a UDP-style sender may fragment.</p>
+
+      <div class="grid-2">
+        <article class="card"><h2>Calculation steps</h2><ol id="sim-workings" class="workings"><li class="hint">Press Start to see each calculation.</li></ol></article>
+        <article class="card"><h2>Event log</h2><ul id="sim-log" class="log" aria-live="polite"></ul></article>
+      </div>
+    </section>
+
+    <footer class="portal-footer">
+      <div><span class="footer-mark" aria-hidden="true">V</span><div><strong>DCN Virtual Laboratory</strong><small>Experiment 05 · IPv6 Fragmentation &amp; Reassembly</small></div></div>
+      <span class="footer-note"><a href="../index.html">Experiment 04 · IPv4</a> · Runs locally in your browser</span>
+    </footer>
+  </main>
+</div>
+<script src="js/model.js"></script>
+<script src="js/shell.js"></script>
+<script src="js/voice.js"></script>
+<script src="js/animation.js"></script>
+<script src="js/v6.js"></script>
+</body>
+</html>

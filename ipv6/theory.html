@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Theory | DCN Virtual Laboratory</title>
+<meta name="theme-color" content="#0b1030">
+<meta name="description" content="Experiment 05: IPv6 fragmentation and reassembly virtual laboratory (DCN V-Lab).">
+<script>
+  (function () {
+    try {
+      var savedTheme = localStorage.getItem('dcn-vlab-theme');
+      document.documentElement.setAttribute('data-theme', savedTheme === 'dark' ? 'dark' : 'light');
+    } catch (error) {
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+  }());
+</script>
+<link rel="stylesheet" href="css/lab.css">
+<link rel="stylesheet" href="css/v6.css">
+</head>
+<body data-page="theory">
+<a class="skip-link" href="#main">Skip to content</a>
+<noscript><p class="noscript">This virtual lab needs JavaScript. Please enable it in your browser.</p></noscript>
+
+<div class="app" id="app">
+
+  <nav class="sidebar" id="sidebar" aria-label="Lab sections">
+    <a class="brand" href="index.html" aria-label="IPv6 experiment overview">
+      <span class="brand-mark" aria-hidden="true"><span></span></span>
+      <span class="brand-text"><strong>DCN <b>V-LAB</b></strong><small>Engineering learning environment</small></span>
+    </a>
+    <div class="sidebar-course">
+      <span class="sidebar-course-label">Course module</span>
+      <strong>Data Communication<br>&amp; Networking</strong>
+      <span class="sidebar-course-meta">Network layer <i></i> Experiment 05 · IPv6</span>
+    </div>
+    <ul class="nav-list">
+      <li class="nav-label">Learn</li>
+      <li><a class="nav-btn" data-index="01" href="index.html">Overview</a></li>
+      <li><a class="nav-btn active" data-index="02" href="theory.html" aria-current="page">Theory and concepts</a></li>
+      <li class="nav-label">Experiment workspace</li>
+      <li><a class="nav-btn" data-index="03" href="setup.html">Packet configuration</a></li>
+      <li><a class="nav-btn" data-index="04" href="simulation.html">Live simulation</a></li>
+      <li><a class="nav-btn" data-index="05" href="headers.html">Packet header inspector</a></li>
+      <li><a class="nav-btn" data-index="06" href="reassembly.html">Reassembly lab</a></li>
+      <li><a class="nav-btn" data-index="07" href="results.html">Results and analysis</a></li>
+      <li class="nav-label">Assessment</li>
+      <li><a class="nav-btn" data-index="08" href="quiz.html">Knowledge check</a></li>
+      <li class="nav-label">Other experiment</li>
+      <li><a class="nav-btn nav-btn-ext" data-index="E4" href="../index.html">IPv4 fragmentation lab <span class="nav-external-mark" aria-hidden="true">↗</span></a></li>
+    </ul>
+    <div class="sidebar-foot">
+      <span class="sidebar-foot-mark" aria-hidden="true">✓</span>
+      <div><strong>Ready for self-study</strong><small>Runs in a modern browser</small></div>
+    </div>
+  </nav>
+
+  <button class="menu-toggle" id="menu-toggle" aria-controls="sidebar" aria-expanded="false">Menu</button>
+
+  <main class="content" id="main" tabindex="-1">
+    <header class="portal-header" aria-label="Virtual laboratory header">
+      <div class="portal-breadcrumb">
+        <span class="portal-brand-tag">V-LAB</span>
+        <span class="breadcrumb-course">Data Communication &amp; Networking</span>
+        <span class="breadcrumb-separator" aria-hidden="true">/</span>
+        <strong id="portal-page-name">Theory and concepts</strong>
+      </div>
+      <div class="portal-actions">
+        <button class="cmdk-hint" id="cmdk-open" type="button" aria-label="Jump to a page (Ctrl or Command + K)">Jump to <kbd>Ctrl K</kbd></button>
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to dark mode" title="Switch to dark mode">
+          <span class="theme-toggle-symbol" aria-hidden="true">☾</span>
+          <span class="theme-toggle-label">Dark mode</span>
+          <span class="theme-toggle-track" aria-hidden="true"><span></span></span>
+        </button>
+        <div class="portal-status"><span class="portal-status-dot" aria-hidden="true"></span><span>Interactive module</span><i></i><span>Experiment 05</span></div>
+      </div>
+      <div class="reading-progress" id="reading-progress" aria-hidden="true"><span id="reading-progress-fill"></span></div>
+    </header>
+
+    <section class="lab-section active" id="sec-theory" aria-labelledby="h-page">
+
+      <h1 id="h-page">Theory</h1>
+      <p class="lead">Open each topic. Equations use P for the packet size and MTU for the Path MTU. The lab uses a simplified teaching model, listed in the last topic.</p>
+
+      <details class="topic" open><summary>What is an IPv6 packet?</summary>
+        <p>An IPv6 packet is a fixed <strong>40-byte base header</strong> followed by the payload. The payload can hold extension headers and upper-layer data such as TCP, UDP or ICMPv6. There is no Header Length field and no header checksum, because the base header never changes size and link layers already check for errors.</p>
+        <p class="eq">P = 40 + Payload Length<br>Payload Length counts every byte after the 40-byte base header</p></details>
+
+      <details class="topic"><summary>Who is allowed to fragment in IPv6?</summary>
+        <p>Only the <strong>source</strong>. A router that cannot forward a packet because it exceeds the outgoing link MTU discards it and returns <strong>ICMPv6 Packet Too Big</strong> (Type 2, Code 0) with the MTU of the next link. The source then sends smaller packets, or fragments them itself.</p>
+        <p>There is no DF flag in IPv6: routers are never allowed to fragment, so it is not needed.</p>
+        <p class="eq">Router: P &gt; MTU  →  drop + ICMPv6 Packet Too Big (MTU)<br>Source: builds fragments that fit the Path MTU<br>Destination: reassembles</p></details>
+
+      <details class="topic"><summary>The Fragment Extension Header</summary>
+        <p>Every fragment carries an <strong>8-byte Fragment Header</strong> between the base header and the data. The base header's Next Header field is set to <strong>44</strong>, which means "a Fragment Header follows".</p>
+        <div class="table-wrap"><table class="data"><caption>Fragment Header fields</caption>
+          <thead><tr><th scope="col">Field</th><th scope="col">Size</th><th scope="col">Purpose</th></tr></thead>
+          <tbody>
+            <tr><td>Next Header</td><td>8 bits</td><td style="white-space:normal;font-family:var(--font)">The header after this one: UDP 17, TCP 6 or ICMPv6 58.</td></tr>
+            <tr><td>Reserved</td><td>8 bits</td><td style="white-space:normal;font-family:var(--font)">Sent as zero.</td></tr>
+            <tr><td>Fragment Offset</td><td>13 bits</td><td style="white-space:normal;font-family:var(--font)">Where this data starts, in 8-byte units.</td></tr>
+            <tr><td>Res</td><td>2 bits</td><td style="white-space:normal;font-family:var(--font)">Reserved, sent as zero.</td></tr>
+            <tr><td>M flag</td><td>1 bit</td><td style="white-space:normal;font-family:var(--font)">1 = more fragments follow. 0 = last fragment.</td></tr>
+            <tr><td>Identification</td><td>32 bits</td><td style="white-space:normal;font-family:var(--font)">Same value in every fragment of one original packet. IPv4 uses only 16 bits.</td></tr>
+          </tbody></table></div></details>
+
+      <details class="topic"><summary>The Next Header chain</summary>
+        <p>Headers are chained. The base header points to the Fragment Header with value 44, and the Fragment Header points to the transport protocol.</p>
+        <p class="eq">IPv6 base header (Next Header = 44)  →  Fragment Header (Next Header = 17)  →  UDP header + data</p>
+        <p>Common values: TCP = 6, UDP = 17, ICMPv6 = 58. The value 44 names the Fragment Header, not a transport protocol. A packet that is <em>not</em> fragmented has no Fragment Header, so its base header carries the transport value (for example 17) directly.</p></details>
+
+      <details class="topic"><summary>Fragment offset and the M flag</summary>
+        <ul>
+          <li><strong>Fragment offset:</strong> the position of this fragment's data inside the original <em>fragmentable part</em>, counted in 8-byte units. Offset = start byte ÷ 8.</li>
+          <li><strong>M (More fragments):</strong> 1 on every fragment except the last, which has M = 0 and so reveals where the data ends.</li>
+          <li>Every fragment except the last must carry a multiple of 8 bytes, because the offset counts in 8-byte units.</li>
+        </ul>
+        <p class="eq">Offset(i) = ByteStart(i) / 8<br>ByteStart(i) = Offset(i) × 8</p></details>
+
+      <details class="topic"><summary>How to calculate the fragments</summary>
+        <p>The 40-byte base header is not fragmented: it is copied into every fragment. Only the bytes after it, the <strong>fragmentable part</strong>, are split.</p>
+        <p class="eq">F = P − 40<br>Dmax = floor((MTU − 40 − 8) / 8) × 8<br>D(i) = min(Dmax, R(i))   where R(i) = bytes still to send<br>Payload Length(i) = 8 + D(i)<br>Total length L(i) = 40 + 8 + D(i)</p>
+        <ul>
+          <li><strong>P</strong>: original packet size (includes the 40-byte base header).</li>
+          <li><strong>F</strong>: fragmentable bytes.</li>
+          <li><strong>Dmax</strong>: most data a non-final fragment may carry.</li>
+          <li><strong>D(i)</strong>, <strong>L(i)</strong>: data and total length of fragment i.</li>
+        </ul>
+        <p>The floor brackets round down, which guarantees a multiple of 8.</p></details>
+
+      <details class="topic"><summary>Path MTU Discovery and Packet Too Big</summary>
+        <p>Path MTU Discovery finds the smallest MTU along the path. When a router cannot forward a packet it sends ICMPv6 <strong>Packet Too Big</strong> and the source learns the limit. IPv6 requires every link to support at least <strong>1280 bytes</strong>, so the Path MTU is never below 1280.</p>
+        <p class="eq">ICMPv6 Packet Too Big:  Type = 2,  Code = 0,  MTU = next-link MTU</p>
+        <p><em>In practice:</em> TCP usually reacts by lowering its segment size. A UDP-style source may instead fragment. The lab shows the fragmenting source, because that is the behaviour this experiment studies.</p>
+        <p>Do not confuse this with IPv4's "Fragmentation Needed" (ICMP Type 3, Code 4). It reports the same kind of limit, but it is a different message.</p></details>
+
+      <details class="topic"><summary>Reassembly at the destination</summary>
+        <p>Only the destination host reassembles. It groups fragments by <strong>source address, destination address and Identification</strong>, then puts each data block at byte <strong>Offset × 8</strong>. Arrival order never decides placement. The fragment with M = 0 gives the total length.</p>
+        <p class="eq">Start(i) = Offset(i) × 8<br>End(i) = Start(i) + D(i) − 1<br>Complete when the last fragment (M = 0) has arrived and no byte range is missing</p>
+        <p><strong>Late is not lost.</strong> Out-of-order fragments still rebuild the packet. <strong>Lost fragment:</strong> there is no retransmission at the IP layer. The destination keeps the partial packet for up to <strong>60 seconds</strong> (RFC 8200). If it is still incomplete it is discarded. If the first fragment (offset 0) had arrived, the destination sends <strong>ICMPv6 Time Exceeded</strong> (Type 3, Code 1) to the source. A higher layer must resend the whole packet.</p>
+        <p>Overlapping fragments are not allowed in IPv6 (RFC 5722). The lab never creates overlaps; exact duplicates are simply ignored.</p></details>
+
+      <details class="topic"><summary>IPv4 and IPv6 side by side</summary>
+        <div class="table-wrap"><table class="data"><thead><tr><th scope="col">Topic</th><th scope="col">IPv4 (Experiment 04)</th><th scope="col">IPv6 (this experiment)</th></tr></thead>
+          <tbody>
+            <tr><td>Who fragments</td><td style="white-space:normal;font-family:var(--font)">Source or any router</td><td style="white-space:normal;font-family:var(--font)">Source only</td></tr>
+            <tr><td>Too-big reply</td><td style="white-space:normal;font-family:var(--font)">ICMP Type 3, Code 4 (only when DF = 1)</td><td style="white-space:normal;font-family:var(--font)">ICMPv6 Type 2, Code 0 (always)</td></tr>
+            <tr><td>Fragment fields live in</td><td style="white-space:normal;font-family:var(--font)">The base header</td><td style="white-space:normal;font-family:var(--font)">A separate 8-byte Fragment Header</td></tr>
+            <tr><td>Identification</td><td style="white-space:normal;font-family:var(--font)">16 bits</td><td style="white-space:normal;font-family:var(--font)">32 bits</td></tr>
+            <tr><td>Header checksum</td><td style="white-space:normal;font-family:var(--font)">Yes, recomputed at every router</td><td style="white-space:normal;font-family:var(--font)">None</td></tr>
+            <tr><td>Reassembly timer</td><td style="white-space:normal;font-family:var(--font)">15 s in this lab (RFC 791 suggestion)</td><td style="white-space:normal;font-family:var(--font)">60 s (RFC 8200)</td></tr>
+            <tr><td>Minimum link MTU</td><td style="white-space:normal;font-family:var(--font)">68 bytes</td><td style="white-space:normal;font-family:var(--font)">1280 bytes</td></tr>
+          </tbody></table></div></details>
+
+      <details class="topic"><summary>Worked example: 4000-byte packet, 1500-byte Path MTU</summary>
+        <ol>
+          <li>Fragmentable part: F = 4000 − 40 = <strong>3960 B</strong>.</li>
+          <li>Dmax = floor((1500 − 40 − 8) / 8) × 8 = floor(1452 / 8) × 8 = <strong>1448 B</strong>.</li>
+          <li>Fragment data: 1448, 1448 and 3960 − 2896 = <strong>1064 B</strong>.</li>
+          <li>Offsets: 0 ÷ 8 = <strong>0</strong>, 1448 ÷ 8 = <strong>181</strong>, 2896 ÷ 8 = <strong>362</strong>.</li>
+          <li>Payload Length: 8 + data = <strong>1456, 1456, 1072 B</strong>. Total length: <strong>1496, 1496, 1112 B</strong>.</li>
+          <li>M flags: <strong>1, 1, 0</strong>.</li>
+        </ol>
+        <div class="table-wrap"><table class="data"><thead><tr><th scope="col">Fragment</th><th scope="col">Data</th><th scope="col">Payload Length</th><th scope="col">Total length</th><th scope="col">Offset</th><th scope="col">M</th></tr></thead>
+          <tbody><tr><td>F1</td><td>1448 B</td><td>1456 B</td><td>1496 B</td><td>0</td><td>1</td></tr><tr><td>F2</td><td>1448 B</td><td>1456 B</td><td>1496 B</td><td>181</td><td>1</td></tr><tr><td>F3</td><td>1064 B</td><td>1072 B</td><td>1112 B</td><td>362</td><td>0</td></tr></tbody></table></div>
+        <div class="btn-row" style="margin-bottom:1rem"><a class="btn primary" href="setup.html">Configure this example →</a><a class="btn" href="simulation.html">Watch the simulation</a></div></details>
+
+      <details class="topic"><summary>Assumptions of this lab</summary>
+        <ul>
+          <li>The packet size includes the 40-byte base header. No other extension headers are present, so the Fragment Header follows the base header directly.</li>
+          <li>Link A (source to router) has an MTU of 9000 bytes. Link B has the Path MTU you choose, from 1280 to 9000 bytes.</li>
+          <li>The packet size ranges from 40 to 9000 bytes. Jumbograms are not modelled.</li>
+          <li>The base header uses Traffic Class 0, Flow Label 0 and Hop Limit 64. The router lowers the Hop Limit to 63. Fragments are not given new addresses.</li>
+        </ul></details>
+
+      <article class="card" style="margin-top:18px">
+        <h2>Standards and references</h2>
+        <ul>
+          <li><strong>RFC 8200</strong> · Internet Protocol, Version 6 (IPv6) Specification</li>
+          <li><strong>RFC 8201</strong> · Path MTU Discovery for IP version 6</li>
+          <li><strong>RFC 4443</strong> · ICMPv6 for IPv6 (Packet Too Big, Time Exceeded)</li>
+          <li><strong>RFC 5722</strong> · Handling of Overlapping IPv6 Fragments</li>
+        </ul>
+      </article>
+    </section>
+
+    <footer class="portal-footer">
+      <div><span class="footer-mark" aria-hidden="true">V</span><div><strong>DCN Virtual Laboratory</strong><small>Experiment 05 · IPv6 Fragmentation &amp; Reassembly</small></div></div>
+      <span class="footer-note"><a href="../index.html">Experiment 04 · IPv4</a> · Runs locally in your browser</span>
+    </footer>
+  </main>
+</div>
+<script src="js/model.js"></script>
+<script src="js/shell.js"></script>
+<script src="js/voice.js"></script>
+<script src="js/v6.js"></script>
+</body>
+</html>

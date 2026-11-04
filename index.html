@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IPv4 Fragmentation and Reassembly: DCN Virtual Lab</title>
+<meta name="theme-color" content="#0b1030">
+<meta name="description" content="Interactive Data Communication and Networking virtual laboratory for IPv4 fragmentation, packet inspection and reassembly.">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<script>
+  (function () {
+    try {
+      var savedTheme = localStorage.getItem('dcn-vlab-theme');
+      document.documentElement.setAttribute('data-theme', savedTheme === 'dark' ? 'dark' : 'light');
+    } catch (error) {
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+  }());
+</script>
+<link rel="stylesheet" href="css/style.css">
+<script>
+  /* Lab configuration. To add the demo video, set ONE of these (see README):
+     videoSrc: "assets/videos/demo.mp4"   (local file)
+     videoUrl: "https://..."              (university-approved embed URL) */
+  window.VLAB_CONFIG = { videoSrc: "", videoUrl: "https://www.youtube.com/embed/O4iy_rZxbyQ" };
+</script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<noscript><p class="noscript">This virtual lab needs JavaScript. Please enable it in your browser.</p></noscript>
+
+<div class="app" id="app">
+
+  <!-- ===== Sidebar navigation ===== -->
+  <nav class="sidebar" id="sidebar" aria-label="Lab sections">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true"><span></span></span>
+      <span class="brand-text"><strong>DCN <b>V-LAB</b></strong><small>Engineering learning environment</small></span>
+    </div>
+    <div class="sidebar-course">
+      <span class="sidebar-course-label">Course module</span>
+      <strong>Data Communication<br>&amp; Networking</strong>
+      <span class="sidebar-course-meta">Network layer <i></i> Experiments 04 &amp; 05</span>
+    </div>
+    <ul class="nav-list">
+      <li class="nav-label">Learn</li>
+      <li><button class="nav-btn active" data-section="home" data-index="01">Overview</button></li>
+      <li><button class="nav-btn" data-section="theory" data-index="02">Theory and concepts</button></li>
+      <li class="nav-label">Experiment workspace</li>
+      <li><button class="nav-btn" data-section="setup" data-index="03">Experiment setup</button></li>
+      <li><button class="nav-btn" data-section="simulation" data-index="04">Live simulation</button></li>
+      <li><button class="nav-btn" data-section="inspector" data-index="05">Packet header inspector</button></li>
+      <li><button class="nav-btn" data-section="reassembly" data-index="06">Reassembly lab</button></li>
+      <li><button class="nav-btn" data-section="results" data-index="07">Results and analysis</button></li>
+      <li><a class="nav-btn nav-btn-ipv6" href="ipv6/index.html" data-index="08">IPv6 fragmentation lab <span class="nav-external-mark" aria-hidden="true">↗</span></a></li>
+      <li class="nav-label">Assessment &amp; resources</li>
+      <li><button class="nav-btn" data-section="quiz" data-index="09">Knowledge check</button></li>
+      <li><button class="nav-btn" data-section="resources" data-index="10">Video and references</button></li>
+    </ul>
+    <div class="sidebar-foot">
+      <span class="sidebar-foot-mark" aria-hidden="true">✓</span>
+      <div><strong>Ready for self-study</strong><small>Runs in a modern browser</small></div>
+    </div>
+
+    <!-- Compact, collapsible voice assistant -->
+    <div class="voice-panel" id="voice-panel">
+      <details class="voice-details" id="voice-details">
+        <summary class="voice-summary"><span class="voice-summary-icon" aria-hidden="true">♫</span><span class="voice-summary-copy"><strong>Voice assistant</strong><small>Listen &amp; ask the lab</small></span><span class="voice-summary-chevron" aria-hidden="true">⌄</span></summary>
+        <div class="voice-content">
+          <div class="voice-head"><span>Speech controls</span><label class="switch"><input type="checkbox" id="voice-toggle"><span>On</span></label></div>
+          <div class="voice-buttons">
+            <button id="voice-play" type="button">Play</button><button id="voice-pause" type="button">Pause</button><button id="voice-resume" type="button">Resume</button><button id="voice-repeat" type="button">Repeat</button>
+          </div>
+          <div class="voice-commands" aria-label="Voice commands">
+            <button type="button" data-voice-cmd="explain-fragmentation">Explain fragmentation</button>
+            <button type="button" data-voice-cmd="explain-offset">Explain fragment offset</button>
+            <button type="button" data-voice-cmd="explain-df">Explain DF flag</button>
+            <button type="button" data-voice-cmd="explain-reassembly">Explain reassembly</button>
+            <button type="button" data-voice-cmd="start-simulation">Start simulation</button>
+            <button type="button" id="voice-mic">Speak a command</button>
+          </div>
+          <p class="voice-note" id="voice-note">Voice is off. Turn it on to hear explanations.</p>
+        </div>
+      </details>
+    </div>
+  </nav>
+
+  <button class="menu-toggle" id="menu-toggle" aria-controls="sidebar" aria-expanded="false">Menu</button>
+
+  <main class="content" id="main" tabindex="-1">
+    <header class="portal-header" aria-label="Virtual laboratory header">
+      <div class="portal-breadcrumb">
+        <span class="portal-brand-tag">V-LAB</span>
+        <span class="breadcrumb-course">Data Communication &amp; Networking</span>
+        <span class="breadcrumb-separator" aria-hidden="true">/</span>
+        <strong id="portal-page-name">Overview</strong>
+      </div>
+      <div class="portal-actions">
+        <button class="cmdk-hint" id="cmdk-open" type="button" aria-label="Jump to a section (Ctrl or Command + K)">Jump to <kbd>Ctrl K</kbd></button>
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to dark mode" title="Switch to dark mode">
+          <span class="theme-toggle-symbol" aria-hidden="true">☾</span>
+          <span class="theme-toggle-label">Dark mode</span>
+          <span class="theme-toggle-track" aria-hidden="true"><span></span></span>
+        </button>
+        <div class="portal-status"><span class="portal-status-dot" aria-hidden="true"></span><span>Interactive module</span><i></i><span id="portal-experiment-label">Experiment 04</span></div>
+      </div>
+      <div class="reading-progress" id="reading-progress" aria-hidden="true"><span id="reading-progress-fill"></span></div>
+    </header>
+
+    <!-- ===== 1. Home ===== -->
+    <section class="lab-section active" id="sec-home" aria-labelledby="h-home">
+      <header class="hero hero-home">
+        <div class="hero-main">
+          <div class="hero-eyebrow"><span class="hero-eyebrow-mark"></span> Network layer <span class="hero-eyebrow-divider"></span> Experiment 4</div>
+          <p class="meta">Data Communication and Networking</p>
+          <h1 id="h-home">IP fragmentation<br><em>&amp; reassembly</em></h1>
+          <p class="lead">Explore how IPv4 datagrams are divided to meet a link's Maximum Transmission Unit, then reconstructed at the destination. Configure the network, observe each fragment, and inspect the packet fields that make reliable reassembly possible.</p>
+          <div class="btn-row">
+            <button class="btn primary" type="button" data-goto="setup" id="btn-start-experiment"><span class="btn-icon" aria-hidden="true">▶</span> Start experiment</button>
+            <button class="btn btn-quiet" type="button" data-goto="theory">Review the theory <span aria-hidden="true">↗</span></button>
+          </div>
+          <div class="hero-assurance"><span class="assurance-check">✓</span> Browser-based virtual experiment <span class="assurance-divider"></span> No backend required</div>
+        </div>
+        <aside class="hero-stage" aria-label="Animated example: a 4000-byte datagram is split by a router into three fragments and rebuilt at the destination">
+          <svg class="stage-svg" viewBox="0 36 560 214" aria-hidden="true" focusable="false">
+            <line class="hs-wire" x1="108" y1="140" x2="238" y2="140"/>
+            <line class="hs-wire" x1="322" y1="140" x2="452" y2="140"/>
+            <g class="hs-node hs-src"><rect x="20" y="96" width="88" height="88" rx="18"/>
+              <g class="hs-ico" transform="translate(64 132)"><rect x="-17" y="-13" width="34" height="23" rx="4"/><path d="M-8 17h16M0 10v7"/></g>
+              <text x="64" y="212">Source</text></g>
+            <g class="hs-node hs-rtr"><rect x="238" y="96" width="84" height="88" rx="18"/>
+              <g class="hs-ico" transform="translate(280 134)"><rect x="-18" y="-3" width="36" height="14" rx="4"/><path d="M-10 -3l-5-12M10 -3l5-12"/><circle cx="-8" cy="4" r="1.6"/><circle cx="-1" cy="4" r="1.6"/></g>
+              <text x="280" y="212">Router</text>
+              <text x="280" y="231" class="hs-sub">MTU 1500</text></g>
+            <g class="hs-node hs-dst"><rect x="452" y="96" width="88" height="88" rx="18"/>
+              <g class="hs-ico" transform="translate(496 134)"><rect x="-16" y="-15" width="32" height="13" rx="3"/><rect x="-16" y="2" width="32" height="13" rx="3"/><circle cx="-9" cy="-8.5" r="1.5"/><circle cx="-9" cy="8.5" r="1.5"/></g>
+              <text x="496" y="212">Destination</text></g>
+            <g class="hs-big"><rect x="116" y="127" width="70" height="26" rx="7"/><text x="151" y="144">4000 B</text></g>
+            <g class="hs-frag hs-f1" style="--dy:-34px"><rect x="262" y="129" width="40" height="22" rx="6"/><text x="282" y="144">1480</text></g>
+            <g class="hs-frag hs-f2" style="--dy:0px"><rect x="262" y="129" width="40" height="22" rx="6"/><text x="282" y="144">1480</text></g>
+            <g class="hs-frag hs-f3" style="--dy:34px"><rect x="266" y="129" width="32" height="22" rx="6"/><text x="282" y="144">1020</text></g>
+            <g class="hs-done"><rect x="436" y="52" width="120" height="28" rx="14"/><text x="496" y="70">4000 B rebuilt</text></g>
+          </svg>
+          <dl class="stage-facts">
+            <div><dt>Datagram</dt><dd>4000 B</dd></div>
+            <div><dt>MTU</dt><dd>1500 B</dd></div>
+            <div><dt>Fragments</dt><dd>3</dd></div>
+          </dl>
+        </aside>
+      </header>
+
+      <div class="overview-strip" aria-label="Experiment characteristics">
+        <div class="overview-strip-item"><span class="overview-strip-icon">01</span><div><strong>Configure</strong><small>Set datagram size and MTU</small></div></div>
+        <div class="overview-strip-item"><span class="overview-strip-icon">02</span><div><strong>Visualise</strong><small>Follow packets through the router</small></div></div>
+        <div class="overview-strip-item"><span class="overview-strip-icon">03</span><div><strong>Investigate</strong><small>Inspect IPv4 header fields</small></div></div>
+        <div class="overview-strip-item"><span class="overview-strip-icon">04</span><div><strong>Verify</strong><small>Reassemble and analyse results</small></div></div>
+      </div>
+
+      <figure class="home-diagram">
+        <div class="figure-heading"><div><span class="figure-kicker">Network flow</span><h2>From source to destination</h2></div><span class="figure-context">IPv4 datagram path</span></div>
+        <svg viewBox="0 0 720 150" role="img" aria-label="Source computer sends a large packet to a router, which sends smaller fragments to the destination computer">
+          <line x1="140" y1="75" x2="290" y2="75" class="wire"/>
+          <line x1="430" y1="75" x2="580" y2="75" class="wire"/>
+          <g class="node n-source"><rect class="base" x="30" y="40" width="110" height="70" rx="8"/><text x="85" y="80">Source</text></g>
+          <g class="node n-router"><rect class="base" x="290" y="40" width="140" height="70" rx="8"/><text x="360" y="80">Router</text></g>
+          <g class="node n-dest"><rect class="base" x="580" y="40" width="110" height="70" rx="8"/><text x="635" y="80">Destination</text></g>
+          <rect x="170" y="62" width="90" height="26" rx="4" class="pk-big"/><text x="215" y="80" class="pk-t">4000 B</text>
+          <rect x="450" y="66" width="34" height="18" rx="3" class="pk-f1"/>
+          <rect x="490" y="66" width="34" height="18" rx="3" class="pk-f2"/>
+          <rect x="530" y="66" width="30" height="18" rx="3" class="pk-f3"/>
+          <text x="215" y="130" class="cap">Datagram larger than MTU</text>
+          <text x="505" y="130" class="cap">MTU 1500: three fragments</text>
+        </svg>
+        <figcaption class="diagram-caption"><span><b>Source</b> generates the original datagram</span><span class="caption-arrow">→</span><span><b>Router</b> fragments when required</span><span class="caption-arrow">→</span><span><b>Destination</b> reassembles by offset</span></figcaption>
+      </figure>
+
+      <section class="workflow-section" aria-labelledby="workflow-heading">
+        <div class="section-heading"><div><span class="section-kicker">Recommended sequence</span><h2 id="workflow-heading">A guided experiment</h2></div><p>Move through the lab in four focused stages.</p></div>
+        <div class="workflow-grid">
+          <button class="workflow-card" type="button" data-goto="theory"><span class="workflow-number">01</span><span class="workflow-title">Understand</span><span class="workflow-description">Review MTU, fragment offset, and IPv4 flags.</span><span class="workflow-link">Explore concepts <b>→</b></span></button>
+          <button class="workflow-card" type="button" data-goto="setup"><span class="workflow-number">02</span><span class="workflow-title">Configure</span><span class="workflow-description">Choose datagram size, MTU, header length, and DF.</span><span class="workflow-link">Set parameters <b>→</b></span></button>
+          <button class="workflow-card" type="button" data-goto="simulation"><span class="workflow-number">03</span><span class="workflow-title">Observe</span><span class="workflow-description">Watch the router process and forward fragments.</span><span class="workflow-link">Open simulation <b>→</b></span></button>
+          <button class="workflow-card" type="button" data-goto="results"><span class="workflow-number">04</span><span class="workflow-title">Analyse</span><span class="workflow-description">Verify fragment fields and interpret the outcome.</span><span class="workflow-link">View results <b>→</b></span></button>
+        </div>
+      </section>
+
+      <div class="section-heading learning-heading"><div><span class="section-kicker">Your learning goals</span><h2>What you will learn</h2></div></div>
+      <div class="grid-2">
+        <article class="card">
+          <h2>Objectives</h2>
+          <ul>
+            <li>Generate an IPv4 datagram and compare its size with the link MTU.</li>
+            <li>Fragment it and calculate every fragment header field.</li>
+            <li>Watch fragments travel, arrive out of order, or go missing.</li>
+            <li>Rebuild the datagram from fragment offsets and detect gaps.</li>
+            <li>See how the Don't Fragment (DF) flag changes what the router does.</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h2>Learning outcomes</h2>
+          <ul>
+            <li>Calculate the maximum fragment payload and the number of fragments.</li>
+            <li>Read Identification, flags and fragment offset in an IPv4 header.</li>
+            <li>Explain why out-of-order arrival is not packet loss.</li>
+            <li>Explain what happens when a fragment is lost.</li>
+          </ul>
+        </article>
+      </div>
+      <article class="card">
+        <h2>Why fragment at all?</h2>
+        <p>Different links have different Maximum Transmission Units. When a datagram is larger than the MTU of the next link, the router either splits it into smaller pieces that fit, or, if DF is set, drops it and tells the sender to use a smaller size. Only the destination reassembles the pieces.</p>
+      </article>
+    </section>
+
+    <!-- ===== 2. Theory ===== -->
+    <section class="lab-section" id="sec-theory" aria-labelledby="h-theory">
+      <h1 id="h-theory">Theory</h1>
+      <p class="lead">Open each topic. Equations use H for the IPv4 header length and MTU for the link limit.</p>
+
+      <details class="topic" open><summary>What is an IP datagram?</summary>
+        <p>An IPv4 datagram is a header (20 to 60 bytes, usually 20) followed by a payload from the transport layer. Total length = header + payload, held in a 16-bit field (maximum 65,535 bytes).</p></details>
+      <details class="topic"><summary>What is MTU, and why does fragmentation occur?</summary>
+        <p>The MTU is the largest IP packet (header included) a link can carry, 1500 bytes on Ethernet. If a datagram is bigger than the MTU of the outgoing link, it has to be split.</p>
+        <p class="eq">fragmentation needed when  datagram size &gt; MTU</p></details>
+      <details class="topic"><summary>How does IPv4 fragmentation work?</summary>
+        <p>The router cuts the payload into pieces and gives each piece its own IP header. Every piece except the last must carry a multiple of 8 bytes, because the offset field counts in 8-byte units.</p>
+        <p class="eq">Pmax = floor((MTU − H) / 8) × 8<br>fragment payload = min(Pmax, remaining payload)<br>total length = fragment payload + H</p>
+        <p>Example: 4000-byte datagram, MTU 1500, H = 20. Payload = 3980, Pmax = 1480, so the fragments carry 1480, 1480 and 1020 bytes.</p></details>
+      <details class="topic"><summary>Identification, fragment offset, MF and DF</summary>
+        <ul>
+          <li><strong>Identification:</strong> a 16-bit value copied into every fragment, so the destination knows which fragments belong together.</li>
+          <li><strong>Fragment offset:</strong> where this payload starts in the original payload, in 8-byte units. Offset = start byte / 8.</li>
+          <li><strong>MF (More Fragments):</strong> 1 on every fragment except the last, which has MF = 0.</li>
+          <li><strong>DF (Don't Fragment):</strong> if 1 and the packet is too big, the router drops it and sends ICMP Type 3, Code 4 (Fragmentation Needed) with the next-hop MTU.</li>
+        </ul></details>
+      <details class="topic"><summary>How does reassembly happen?</summary>
+        <p>The destination groups fragments by source, destination, protocol and Identification, then places each payload at byte position offset × 8. The final fragment (MF = 0) reveals the total length.</p>
+        <p class="eq">total payload = last offset × 8 + last fragment payload</p>
+        <p>The datagram is complete when the total is known and no byte range is missing.</p></details>
+      <details class="topic"><summary>Lost fragments and out-of-order arrival</summary>
+        <p><strong>Out of order:</strong> fragments may take different paths and arrive in any order. Because each carries its own offset, the destination still rebuilds the datagram correctly. Late is not lost.</p>
+        <p><strong>Lost fragment:</strong> IP gives no retransmission. The destination keeps the partial datagram until the reassembly timer expires (RFC 791 suggests 15 s), then discards it and may send ICMP Time Exceeded (Type 11, Code 1). A higher layer such as TCP must resend the whole datagram, which is why losing one fragment is costly.</p></details>
+      <details class="topic"><summary>Assumption about header options in this lab</summary>
+        <p>Header lengths of 24 and 28 bytes mean IP options are present. In real IPv4 only options marked "copied" go into every fragment. This lab assumes all options are copied, so every fragment has the same header length.</p></details>
+
+
+    </section>
+
+    <!-- ===== 3. Setup ===== -->
+    <section class="lab-section" id="sec-setup" aria-labelledby="h-setup">
+      <h1 id="h-setup">Experiment setup</h1>
+      <div class="grid-2 setup-grid">
+        <form class="card controls" id="setup-form" onsubmit="return false">
+          <div class="field">
+            <label for="in-size">Original datagram size: <output id="in-size-val">4000</output> bytes</label>
+            <input type="range" id="in-size" min="500" max="6000" step="1" value="4000">
+          </div>
+          <div class="field">
+            <label for="in-mtu">Network MTU: <output id="in-mtu-val">1500</output> bytes</label>
+            <input type="range" id="in-mtu" min="128" max="2000" step="1" value="1500">
+          </div>
+          <fieldset class="field">
+            <legend>IPv4 header length</legend>
+            <label class="choice"><input type="radio" name="header-len" value="20" checked> 20 bytes</label>
+            <label class="choice"><input type="radio" name="header-len" value="24"> 24 bytes (options)</label>
+            <label class="choice"><input type="radio" name="header-len" value="28"> 28 bytes (options)</label>
+          </fieldset>
+          <fieldset class="field">
+            <legend>Don't Fragment flag</legend>
+            <label class="choice"><input type="radio" name="df" value="0" checked> DF = 0 (fragmentation allowed)</label>
+            <label class="choice"><input type="radio" name="df" value="1"> DF = 1 (fragmentation prohibited)</label>
+          </fieldset>
+          <div id="setup-errors" class="errors" role="alert" aria-live="polite"></div>
+          <button class="btn primary big" type="button" id="btn-simulate">Simulate</button>
+        </form>
+
+        <div>
+          <article class="card">
+            <h2>Live preview</h2>
+            <div id="split-viz" class="split-viz" aria-hidden="true"></div>
+            <div id="setup-preview" aria-live="polite"></div>
+          </article>
+          <article class="card">
+            <h2>Scenarios</h2>
+            <div class="scenario-grid" id="scenario-buttons">
+              <button class="btn" type="button" data-scenario="1">1. Normal fragmentation</button>
+              <button class="btn" type="button" data-scenario="2">2. No fragmentation needed</button>
+              <button class="btn" type="button" data-scenario="3">3. Small MTU</button>
+              <button class="btn" type="button" data-scenario="4">4. Fragmentation prohibited</button>
+              <button class="btn" type="button" data-scenario="5">5. Missing fragment</button>
+              <button class="btn" type="button" data-scenario="6">6. Out-of-order delivery</button>
+            </div>
+            <p class="hint" id="scenario-desc">Pick a scenario to load its settings.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 4. Simulation ===== -->
+    <section class="lab-section" id="sec-simulation" aria-labelledby="h-sim" data-sim-state="idle">
+      <h1 id="h-sim">Interactive simulation</h1>
+
+      <div class="sim-summary" id="sim-summary" aria-label="Parameters of this run"></div>
+
+      <div class="sim-bar" role="toolbar" aria-label="Simulation controls">
+        <div class="sim-transport">
+          <button class="btn primary" type="button" id="btn-sim-start" title="Start from the beginning (Space)"><span class="ico-btn" aria-hidden="true">▶</span>Start</button>
+          <button class="btn" type="button" id="btn-sim-pause" title="Pause (Space)"><span class="ico-btn" aria-hidden="true">❚❚</span>Pause</button>
+          <button class="btn" type="button" id="btn-sim-resume" title="Resume playback (Space)"><span class="ico-btn" aria-hidden="true">⏵</span>Resume</button>
+          <button class="btn" type="button" id="btn-sim-step" title="Play one stage at a time (→)"><span class="ico-btn" aria-hidden="true">⏭</span>Step</button>
+          <button class="btn" type="button" id="btn-sim-reset" title="Clear the stage (R)"><span class="ico-btn" aria-hidden="true">⟲</span>Reset</button>
+        </div>
+        <div class="speed" role="group" aria-label="Playback speed">
+          <span class="speed-label">Speed</span>
+          <div class="speed-presets">
+            <button type="button" data-speed="0.5" aria-label="Half speed">0.5×</button>
+            <button type="button" data-speed="1" aria-label="Normal speed">1×</button>
+            <button type="button" data-speed="2" aria-label="Double speed">2×</button>
+          </div>
+          <input type="range" id="sim-speed" min="0.25" max="3" step="0.25" value="1" aria-label="Playback speed">
+          <output id="sim-speed-val">1×</output>
+        </div>
+      </div>
+
+      <div class="sim-now" aria-live="polite">
+        <span class="stage-chip" id="sim-stage">Ready</span>
+        <p class="status-line"><strong id="sim-status">Ready. Set the parameters and press Start.</strong></p>
+      </div>
+      <progress id="sim-progress" max="100" value="0" aria-label="Simulation progress"></progress>
+      <ol class="sim-stepper" id="sim-stepper" aria-label="Simulation stages"></ol>
+
+      <div class="topology-frame">
+      <figure class="topology">
+        <svg id="topology" viewBox="0 40 900 215" role="img" aria-label="Network topology: source, router, destination">
+          <line id="link-a" x1="150" y1="150" x2="390" y2="150" class="wire"/>
+          <line id="link-b" x1="510" y1="150" x2="750" y2="150" class="wire"/>
+          <text x="270" y="236" class="link-label" id="label-link-a">Link A: MTU large enough</text>
+          <text x="630" y="236" class="link-label" id="label-link-b">Link B: MTU 1500</text>
+
+          <g id="node-source" class="node n-source"><rect class="base" x="30" y="100" width="120" height="100" rx="14"/><g class="ico" transform="translate(90 128)"><rect x="-15" y="-11" width="30" height="20" rx="3"/><path d="M-7 14h14M0 9v5"/></g><text x="90" y="162" class="nm">Source</text><text x="90" y="182" class="ip">192.168.1.10</text></g>
+          <g id="node-router" class="node n-router"><rect class="base" x="390" y="100" width="120" height="100" rx="14"/><g class="ico" transform="translate(450 130)"><rect x="-16" y="-3" width="32" height="13" rx="3"/><path d="M-9 -3l-4-10M9 -3l4-10"/><circle cx="-7" cy="3.5" r="1.4"/><circle cx="-1" cy="3.5" r="1.4"/></g><text x="450" y="162" class="nm">Router</text><text x="450" y="182" class="ip">192.168.1.1</text></g>
+          <g id="node-dest" class="node n-dest"><rect class="base" x="750" y="100" width="120" height="100" rx="14"/><g class="ico" transform="translate(810 128)"><rect x="-14" y="-13" width="28" height="11" rx="2"/><rect x="-14" y="1" width="28" height="11" rx="2"/><circle cx="-8" cy="-7.5" r="1.3"/><circle cx="-8" cy="6.5" r="1.3"/></g><text x="810" y="162" class="nm">Destination</text><text x="810" y="182" class="ip">10.0.0.20</text></g>
+
+          <text x="450" y="80" class="router-check" id="router-check" text-anchor="middle"></text>
+          <g id="packet-layer"></g>
+          <g id="icmp-layer"></g>
+        </svg>
+        <figcaption id="topology-caption">Packets appear here during the simulation.</figcaption>
+      </figure>
+      </div>
+
+      <div class="sim-next" id="sim-next" hidden>
+        <div><strong>Run complete.</strong> <span id="sim-next-text">Continue the experiment:</span></div>
+        <div class="btn-row" id="sim-next-actions"></div>
+      </div>
+
+      <div class="frag-tray" id="frag-tray" aria-label="Fragments produced by the router" hidden>
+        <div class="tray-head"><h2>Fragments</h2><span class="tray-hint" id="tray-hint">Waiting for the router to split the datagram.</span></div>
+        <ul class="tray-list" id="tray-list"></ul>
+      </div>
+
+      <p class="shortcut-hint">Shortcuts: <kbd>Space</kbd> start, pause or resume &nbsp; <kbd>→</kbd> step &nbsp; <kbd>R</kbd> reset</p>
+
+      <div class="grid-2">
+        <article class="card"><h2>Calculation steps</h2><ol id="sim-workings" class="workings"><li class="hint">Press Start to see each calculation.</li></ol></article>
+        <article class="card"><h2>Event log</h2><ul id="sim-log" class="log" aria-live="polite"></ul></article>
+      </div>
+    </section>
+
+    <!-- ===== 5. Inspector ===== -->
+    <section class="lab-section" id="sec-inspector" aria-labelledby="h-insp">
+      <h1 id="h-insp">Packet header inspector</h1>
+      <p class="lead">Choose a packet to see its IPv4 header. Select any field for an explanation.</p>
+      <p class="hint" id="inspector-empty">Run a simulation first to generate packets.</p>
+      <div class="insp-layout">
+        <div class="insp-list" id="inspector-list" role="listbox" aria-label="Packets"></div>
+        <div class="insp-main">
+          <div id="header-diagram" aria-live="polite"></div>
+          <article class="card" id="field-explain"><p class="hint">Select a field in the header to read what it does.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 6. Reassembly lab ===== -->
+    <section class="lab-section" id="sec-reassembly" aria-labelledby="h-re">
+      <h1 id="h-re">Reassembly laboratory</h1>
+      <p class="lead">You are the destination. Deliver the fragments in any order, lose one, or repeat one, and watch the datagram rebuild by byte position.</p>
+      <div class="sim-bar">
+        <button class="btn primary" type="button" id="btn-re-next">Receive next</button>
+        <button class="btn" type="button" id="btn-re-all">Receive all</button>
+        <label class="speed">Order
+          <select id="re-order">
+            <option value="in-order">In order</option>
+            <option value="reverse">Reverse</option>
+            <option value="shuffle">Shuffled</option>
+          </select></label>
+        <button class="btn" type="button" id="btn-re-duplicate">Duplicate last</button>
+        <button class="btn" type="button" id="btn-re-retry">Retry missing</button>
+        <button class="btn" type="button" id="btn-re-timeout">Advance clock to timeout</button>
+        <button class="btn" type="button" id="btn-re-reset">Reset</button>
+      </div>
+      <p class="hint">Tick "lose" on a fragment card to make it vanish in the network. Click a card to deliver it yourself.</p>
+      <div class="re-packets" id="re-packets"></div>
+
+      <article class="card">
+        <h2>Original datagram, by byte position</h2>
+        <div class="byte-bar" id="re-bar" role="img" aria-label="Received byte ranges of the datagram"></div>
+        <div class="re-merge" id="re-merge"></div>
+        <dl class="stats" id="re-stats"></dl>
+        <p id="re-status" class="status-badge" aria-live="polite">Waiting for fragments.</p>
+        <p id="re-missing" class="hint"></p>
+        <p id="re-timer" class="hint"></p>
+        <p id="re-note" class="hint">Incomplete datagrams are discarded when the reassembly timer expires (15 s in this lab, RFC 791).</p>
+      </article>
+    </section>
+
+    <!-- ===== 7. Results ===== -->
+    <section class="lab-section" id="sec-results" aria-labelledby="h-res">
+      <h1 id="h-res">Results and analysis</h1>
+      <p class="hint" id="results-empty">Run a simulation to see results.</p>
+      <div id="results-body" hidden>
+        <dl class="stats" id="results-summary"></dl>
+        <div class="table-wrap">
+          <table class="data" id="results-table">
+            <caption>Packets leaving the router</caption>
+            <thead><tr><th scope="col">Fragment</th><th scope="col">Payload (B)</th><th scope="col">Total length (B)</th><th scope="col">Byte range</th><th scope="col">Offset (8-byte units)</th><th scope="col">MF</th><th scope="col">DF</th><th scope="col">Checksum</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <article class="card"><h2>Verification</h2><ul id="results-verify" class="checks"></ul></article>
+        <article class="card"><h2>Conclusion</h2><p id="results-conclusion"></p></article>
+        <button class="btn primary" type="button" id="btn-results-repeat">Reset and repeat with new parameters</button>
+      </div>
+    </section>
+
+    <!-- ===== 8. Quiz ===== -->
+    <section class="lab-section" id="sec-quiz" aria-labelledby="h-quiz">
+      <h1 id="h-quiz">Quiz</h1>
+      <div id="quiz-root"></div>
+    </section>
+
+    <!-- ===== 9. Video and references ===== -->
+    <section class="lab-section" id="sec-resources" aria-labelledby="h-res2">
+      <h1 id="h-res2">Demonstration video and references</h1>
+
+      <article class="card">
+        <h2>Demonstration video</h2>
+        <div class="video-wrap" id="video-wrap">
+          <div class="video-placeholder" id="video-placeholder">
+            <p><strong>Demonstration video coming soon.</strong></p>
+            <p>To add it, copy the recorded file to <code>assets/videos/demo.mp4</code> and set <code>videoSrc</code> in the configuration block at the top of <code>index.html</code>, or set <code>videoUrl</code> to a university-approved video link.</p>
+          </div>
+        </div>
+        <div class="video-actions" id="video-actions" hidden aria-live="polite">
+          <p class="video-help-text" id="video-help-text"></p>
+          <a class="video-watch-link" id="video-watch-link" href="https://youtu.be/O4iy_rZxbyQ" target="_blank" rel="noopener">
+            <span aria-hidden="true">▶</span> Watch on YouTube
+          </a>
+        </div>
+        <p class="hint">The video covers: introduction, setting packet size, setting MTU, fragmentation, header inspection, reassembly, a missing fragment, and the final result.</p>
+      </article>
+
+      <article class="card">
+        <h2>Experiment documentation</h2>
+        <details class="topic"><summary>Aim</summary><p>To simulate IPv4 fragmentation when the MTU is smaller than the datagram, and to reassemble the original datagram at the destination.</p></details>
+        <details class="topic"><summary>Required theory</summary><p>MTU, IPv4 header fields (Identification, flags, fragment offset), Pmax = floor((MTU − H) / 8) × 8, ICMP Fragmentation Needed, reassembly and timeout. See the Theory section.</p></details>
+        <details class="topic"><summary>Procedure</summary>
+          <ol><li>Open Experiment setup and set the datagram size, MTU, header length and DF flag.</li>
+          <li>Press Simulate and watch the fragments travel in Interactive simulation.</li>
+          <li>Open the Packet header inspector and record the fields of each fragment.</li>
+          <li>In the Reassembly laboratory, deliver fragments in different orders, then lose one.</li>
+          <li>Repeat with DF = 1 and with at least two other MTU values. Read the Results page.</li></ol></details>
+        <details class="topic"><summary>Observations</summary><p>Record in your notebook: Pmax, number of fragments, each offset, MF and total length, and the reassembly status for each trial.</p></details>
+        <details class="topic"><summary>Result and conclusion</summary><p id="doc-result">Your results appear on the Results and analysis page after each run. Fragmentation succeeds only when DF = 0; the destination rebuilds the datagram only when every byte range has arrived before the timer expires.</p></details>
+        <details class="topic"><summary>Viva questions</summary>
+          <ol><li>Why must non-final fragment payloads be multiples of 8 bytes?</li>
+          <li>Who performs reassembly, the router or the destination, and why?</li>
+          <li>What does the router return when DF = 1 and the packet is too large?</li>
+          <li>Why is losing one fragment costly for the whole datagram?</li>
+          <li>How does the destination know it has the last fragment?</li>
+          <li>How does the checksum change when the router decrements TTL?</li></ol></details>
+      </article>
+
+      <article class="card">
+        <h2>References</h2>
+        <ul>
+          <li>J. Kurose and K. Ross, <em>Computer Networking: A Top-Down Approach</em>, Pearson.</li>
+          <li>RFC 791: Internet Protocol.</li>
+          <li>RFC 6864: Updated Specification of the IPv4 ID Field.</li>
+          <li>RFC 792: Internet Control Message Protocol.</li>
+        </ul>
+      </article>
+
+      <article class="card team-section" aria-labelledby="team-title">
+
+        <div class="team-heading">
+          <div>
+            <span class="team-eyebrow">PROJECT TEAM · EXPERIMENT 04</span>
+            <h2 id="team-title">Meet the Team.</h2>
+            <p class="team-subtitle">
+              Data Communication and Networking
+            </p>
+          </div>
+
+          <span class="team-count">06 MEMBERS</span>
+        </div>
+
+        <div class="team-grid">
+
+          <div class="team-member">
+            <div class="avatar">BE</div>
+            <div class="member-info">
+              <span class="member-number">MEMBER 01</span>
+              <h3>Biswajit E</h3>
+              <p class="roll-number">2401109063</p>
+            </div>
+          </div>
+
+          <div class="team-member">
+            <div class="avatar">RD</div>
+            <div class="member-info">
+              <span class="member-number">MEMBER 02</span>
+              <h3>Rithik D</h3>
+              <p class="roll-number">2401109065</p>
+            </div>
+          </div>
+
+          <div class="team-member">
+            <div class="avatar">GJ</div>
+            <div class="member-info">
+              <span class="member-number">MEMBER 03</span>
+              <h3>Gopi Ganesh J</h3>
+              <p class="roll-number">2401109071</p>
+            </div>
+          </div>
+
+          <div class="team-member">
+            <div class="avatar">GG</div>
+            <div class="member-info">
+              <span class="member-number">MEMBER 04</span>
+              <h3>Govardhan G</h3>
+              <p class="roll-number">2401109072</p>
+            </div>
+          </div>
+
+          <div class="team-member">
+            <div class="avatar">MJ</div>
+            <div class="member-info">
+              <span class="member-number">MEMBER 05</span>
+              <h3>Matthew Jeyaraj S</h3>
+              <p class="roll-number">2401109079</p>
+            </div>
+          </div>
+
+          <div class="team-member">
+            <div class="avatar">NA</div>
+            <div class="member-info">
+              <span class="member-number">MEMBER 06</span>
+              <h3>Nishanth A</h3>
+              <p class="roll-number">2401109088</p>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="team-footer">
+          <span>DCN VIRTUAL LAB</span>
+          <span class="team-footer-dot">•</span>
+          <span>PROJECT GROUP</span>
+        </div>
+
+      </article>
+    </section>
+
+    <footer class="portal-footer">
+      <div><span class="footer-mark">V</span><div><strong>DCN Virtual Laboratory</strong><small>Experiment 04 · IP Fragmentation and Reassembly</small></div></div>
+      <span class="footer-note">An interactive learning resource for Data Communication and Networking</span>
+    </footer>
+  </main>
+</div>
+
+<!-- Classic scripts (no ES modules) so the lab runs from file:// -->
+<script src="js/checksum.js"></script>
+<script src="js/fragmentation.js"></script>
+<script src="js/reassembly.js"></script>
+<script src="js/quiz.js"></script>
+<script src="js/packet_inspector.js"></script>
+<script src="js/network_animation.js"></script>
+<script src="js/voice_assistant.js"></script>
+<script src="js/app.js"></script>
+<script src="js/ui_enhancements.js"></script>
+</body>
+</html>

@@ -1,0 +1,409 @@
+/* DCN Virtual Lab · Experiment 05 (IPv6): additions on top of lab.css (the shared Experiment 04 design system). */
+
+/* Navigation as links */
+.nav-list a.nav-btn { text-decoration: none; }
+.nav-btn-ext { color: #9aa8ff; }
+.nav-external-mark { margin-left: auto; font-size: .85rem; opacity: .8; }
+.brand { text-decoration: none; }
+
+/* Pager as links */
+.pager a { display: flex; min-width: 0; max-width: 48%; flex-direction: column; gap: 2px; padding: 12px 18px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface); color: var(--ink); text-align: left; text-decoration: none; transition: border-color .18s, transform .18s var(--ease), box-shadow .18s; }
+.pager a:hover { border-color: var(--accent-line); box-shadow: var(--shadow-2); transform: translateY(-2px); }
+.pager a small { color: var(--muted); font-size: .76rem; }
+.pager a strong { font-size: .95rem; }
+.pager a.pager-next { margin-left: auto; text-align: right; background: var(--accent); border-color: transparent; }
+.pager a.pager-next small { color: rgba(255, 255, 255, .75); }
+html[data-theme="dark"] .pager a.pager-next small { color: rgba(7, 11, 25, .7); }
+.pager a.pager-next strong { color: var(--accent-ink); }
+@media (max-width: 640px) { .pager a { max-width: 100%; } }
+
+/* Links styled as buttons / cards */
+a.btn { text-decoration: none; }
+a.workflow-card { text-decoration: none; }
+.hero-home a.btn.primary { color: #0a0f2e; }
+.hero-home a.btn-quiet { color: #fff; }
+
+/* Setup: slider + exact value */
+.range-row { display: grid; grid-template-columns: minmax(0, 1fr) 104px; align-items: center; gap: 16px; }
+.range-row input[type="number"] { width: 100%; padding: 8px 10px; font-family: var(--mono); font-size: .9rem; font-weight: 650; text-align: right; }
+.setup-grid .prev-warn { margin-top: 10px; }
+.prev-verdict.warn { border-color: var(--warn); background: var(--warn-soft); }
+.sv-seg.is-hdr { background: repeating-linear-gradient(135deg, var(--faint) 0 6px, var(--line-strong) 6px 12px); color: var(--ink); }
+
+/* Hero scene: IPv6 story (drop, Packet Too Big back to the source, fragments made at the source) */
+.v6-scene .hs-big { animation-name: v6Big; }
+.v6-scene .hs-frag { animation-name: v6Frag; }
+.v6-scene .hs-done { animation-name: v6Done; }
+.v6-scene .hs-f2 { animation-delay: .25s; } .v6-scene .hs-f3 { animation-delay: .5s; }
+.hs-x, .hs-ptb { opacity: 0; transform-box: fill-box; transform-origin: center; animation-duration: 9s; animation-iteration-count: infinite; animation-timing-function: ease-in-out; animation-fill-mode: both; }
+.hs-x { animation-name: v6X; }
+.hs-x circle { fill: rgba(255, 95, 122, .2); stroke: #ff5f7a; stroke-width: 2; }
+.hs-x path { stroke: #ff7b93; stroke-width: 3; stroke-linecap: round; fill: none; }
+.hs-ptb { animation-name: v6Ptb; }
+.hs-ptb rect { fill: #ffc857; filter: drop-shadow(0 0 8px #ffc857); }
+.hs-ptb text { fill: #3a2600; font-size: 10.5px; font-family: var(--mono); font-weight: 700; }
+@keyframes v6Big {
+  0%, 3% { opacity: 0; transform: translateX(0); }
+  8% { opacity: 1; transform: translateX(0); }
+  26% { opacity: 1; transform: translateX(100px); }
+  30% { opacity: 1; transform: translateX(104px) scale(1); }
+  35%, 100% { opacity: 0; transform: translateX(104px) scale(.4); }
+}
+@keyframes v6X { 0%, 28% { opacity: 0; transform: scale(.4); } 33%, 40% { opacity: 1; transform: scale(1); } 46%, 100% { opacity: 0; transform: scale(1.2); } }
+@keyframes v6Ptb { 0%, 34% { opacity: 0; transform: translate(0, 0); } 38% { opacity: 1; transform: translate(0, 0); } 54% { opacity: 1; transform: translate(-128px, 0); } 58%, 100% { opacity: 0; transform: translate(-128px, 0) scale(.6); } }
+@keyframes v6Frag {
+  0%, 58% { opacity: 0; transform: translate(0, 0) scale(.5); }
+  62% { opacity: 1; transform: translate(0, 0) scale(1); }
+  68% { opacity: 1; transform: translate(0, var(--dy)); }
+  72% { opacity: 1; transform: translate(0, 0); }
+  92% { opacity: 1; transform: translate(322px, 0); }
+  97%, 100% { opacity: 0; transform: translate(336px, 0) scale(.6); }
+}
+@keyframes v6Done { 0%, 90% { opacity: 0; transform: translateY(8px); } 95%, 99% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; } }
+
+/* Setup preview extras */
+.insp-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin-bottom: 12px; }
+.insp-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.insp-toolbar .speed { margin-left: 0; }
+
+/* Header inspector: 32-bit grid rows with spans */
+.hdr-group { margin: 14px 0 6px; color: var(--muted); font-size: .76rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.hdr-group:first-of-type { margin-top: 0; }
+.hdr-group b { color: var(--ink); font-family: var(--mono); letter-spacing: 0; text-transform: none; }
+.hf.addr .val { font-size: .8rem; letter-spacing: .01em; }
+.hf.tiny { padding: 4px 1px; }
+.hf.tiny .name { font-size: .6rem; }
+.hf.tiny .val { font-size: .74rem; }
+.hf.changed .val { color: var(--warn); }
+.hf.changed { border-color: var(--warn); background: var(--warn-soft); }
+#field-explain .eq { margin-top: .6rem; }
+.hdr-inner { min-width: 700px; }
+
+/* Reassembly: IPv6 extras */
+.byte-gap-note { color: var(--muted); font-size: .84rem; }
+.re-card .tag-first { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 99px; background: var(--accent-soft); color: var(--accent); font-size: .66rem; font-weight: 700; }
+.timer-track { height: 8px; margin-top: 6px; overflow: hidden; border-radius: 99px; background: var(--surface-3); }
+.timer-track span { display: block; height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, var(--ok), var(--warn), var(--bad)); transition: width .35s var(--ease); }
+
+/* Results */
+table.data td.wrap { white-space: normal; font-family: var(--font); }
+.checks li .why { display: block; color: var(--muted); font-size: .8rem; }
+
+/* Reduced motion: static end state for the home scene */
+@media (prefers-reduced-motion: reduce) {
+  .hs-x, .hs-ptb { opacity: 0; animation: none; }
+  .v6-scene .hs-big { opacity: 0; animation: none; }
+  .v6-scene .hs-frag { opacity: 1; animation: none; transform: translate(322px, var(--dy)); }
+  .v6-scene .hs-done { opacity: 1; animation: none; }
+}
+
+/* Simulation glyphs */
+.pkt.rebuilt rect { fill: #1fd196; filter: drop-shadow(0 0 9px #1fd196); }
+.pkt.rebuilt text { fill: #04261b; }
+.pkt.focus rect { stroke: #fff; stroke-width: 2.2; }
+.buf-seg.placed { stroke: #fff; stroke-width: 1.4; }
+.hf.addr { min-height: 38px; flex-direction: row; gap: 14px; justify-content: space-between; padding: 6px 16px; }
+
+/* ───────── V3.1 green identity for Experiment 05 ───────── */
+:root {
+  --bg: #f0f7f4; --bg-grad: radial-gradient(1200px 520px at 85% -120px, rgba(20, 184, 140, .13), transparent 60%);
+  --surface-2: #f5faf8; --surface-3: #e6f1ed; --glass: rgba(240, 247, 244, .85);
+  --line: #dbe8e3; --line-strong: #c3d7cf; --ink: #0b1f1a; --ink-2: #27403a; --muted: #5d7770; --faint: #86a098;
+  --accent: #0e9f77; --accent-2: #14b88a; --accent-ink: #ffffff;
+  --accent-soft: rgba(14, 159, 119, .10); --accent-line: rgba(14, 159, 119, .40);
+}
+html[data-theme="dark"] {
+  --bg: #06120f; --bg-grad: radial-gradient(1100px 520px at 85% -140px, rgba(40, 214, 160, .16), transparent 60%);
+  --surface: #0b1a16; --surface-2: #10231e; --surface-3: #16302a; --glass: rgba(6, 18, 15, .8);
+  --line: #1a332c; --line-strong: #27483f; --ink: #e9fbf5; --ink-2: #c3e0d6; --muted: #8fb2a6; --faint: #6b8c80;
+  --accent: #34d3a4; --accent-2: #7cecc6; --accent-ink: #04201a;
+  --accent-soft: rgba(52, 211, 164, .14); --accent-line: rgba(52, 211, 164, .45);
+}
+.sidebar, html[data-theme="dark"] .sidebar { background: linear-gradient(180deg, #082320 0%, #05171a 100%); }
+.brand-mark { background: linear-gradient(135deg, #12b886, #2dd4a0); box-shadow: 0 8px 22px -6px rgba(18, 184, 134, .7); }
+.brand-text strong b, .sidebar-course-meta, .nav-btn-ext { color: #6ee7c0; }
+.nav-btn.active { background: linear-gradient(90deg, rgba(45, 212, 160, .30), rgba(45, 212, 160, .10)); }
+.nav-btn.active::before { background: #14b88a; box-shadow: 0 6px 16px -4px rgba(20, 184, 138, .8); }
+.nav-btn:focus-visible { outline-color: #6ee7c0; }
+.hero-home { background: radial-gradient(700px 360px at 100% 0%, rgba(20, 184, 138, .45), transparent 65%), radial-gradient(560px 320px at 0% 110%, rgba(47, 183, 255, .16), transparent 65%), #06231e; }
+.hero-home .meta { color: #6ee7c0; } .hero-home h1 em { color: #a6f0d8; } .hero-home .lead { color: #b3d9ce; } .hero-assurance { color: #8fc2b3; }
+.hs-node rect { fill: #0d2f29; } .hs-wire { stroke: #3a8a78; }
+.topology { border-color: #1b4a40; background: radial-gradient(800px 320px at 50% 0%, rgba(20, 184, 138, .22), transparent 70%), #06201c; }
+#sec-simulation[data-sim-state="running"] .topology { border-color: #1fa17f; box-shadow: var(--shadow-3), 0 0 0 1px rgba(45, 212, 160, .35); }
+.node .base { fill: #0b2b25; } .node.active .base { fill: #104038; stroke: #7cf0cb; filter: drop-shadow(0 0 12px rgba(124, 240, 203, .6)); }
+.wire { stroke: #2f7d6c; } .link-label, .cap, .buf-label, .topology figcaption { fill: #8fc2b3; color: #8fc2b3; }
+.buf-bg { stroke: #2f7d6c; }
+.pkt.original rect { fill: #14a37f; } .pkt.original text { fill: #fff; }
+.home-diagram .pk-big { fill: #14a37f; }
+progress::-webkit-progress-value { background: linear-gradient(90deg, #2dd4a0, var(--accent), var(--accent-2)); }
+.video-wrap, .cmdk { background-color: rgba(3, 14, 12, .65); }
+.hf.selected { box-shadow: 0 0 0 2px var(--accent), 0 10px 22px -10px var(--accent); }
+.hf.frag { border-color: rgba(20, 184, 138, .55); background: rgba(20, 184, 138, .12); }
+.hf.frag .name { color: var(--accent); }
+html[data-theme="dark"] .hf.frag .name { color: #6ee7c0; }
+.stage-chip[data-tone="step"] { border-color: var(--accent-line); background: var(--accent-soft); color: var(--accent); }
+.reading-progress span { background: linear-gradient(90deg, #14b88a, #2dd4a0, #2fb7ff); }
+input[type="range"]::-webkit-slider-thumb { border-color: var(--accent); }
+.hf.addr { padding: 6px 4px; flex-direction: column; min-height: 54px; gap: 3px; }
+.hf.addr .val { font-size: .86rem; }
+.hf.addr .name { font-size: .66rem; }
+.hdr-group { display: flex; align-items: center; gap: 8px; padding-top: 4px; border-top: 1px dashed var(--line-strong); }
+.hdr-group:first-of-type { border-top: 0; padding-top: 0; }
+.hdr-group b { color: var(--accent); }
+.ipv4-hdr { padding: 20px 18px; }
+.hf { min-height: 66px; }
+.bit-ruler { margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+
+
+/* IPv6 voice assistant — collapsible sidebar module */
+.v6-voice-panel{margin:14px 12px 18px;position:relative;z-index:5;flex:0 0 auto}
+.v6-voice-details{border:1px solid var(--line-strong);border-radius:16px;background:var(--surface);box-shadow:var(--shadow-1);overflow:hidden}
+.v6-voice-details>summary{display:flex;align-items:center;gap:12px;padding:13px;cursor:pointer;list-style:none}
+.v6-voice-details>summary::-webkit-details-marker{display:none}
+.v6-voice-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:13px;background:var(--accent-soft);color:var(--accent);font-size:21px}
+.v6-voice-title{display:grid;gap:3px;min-width:0;flex:1}
+.v6-voice-title strong{font-size:.9rem;color:var(--ink)}
+.v6-voice-title small{font-size:.75rem;color:var(--muted)}
+.v6-voice-chevron{color:var(--muted);transition:transform .2s}
+.v6-voice-details[open] .v6-voice-chevron{transform:rotate(180deg)}
+.v6-voice-body{padding:0 13px 14px;border-top:1px solid var(--line)}
+.v6-voice-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:13px 0 8px;color:var(--muted);font-size:.78rem}
+.v6-voice-row label{display:flex;align-items:center;gap:7px}
+.v6-voice-body select{width:100%;min-width:0;padding:9px 10px;border:1px solid var(--line-strong);border-radius:9px;background:var(--surface-2);color:var(--ink);font:inherit;font-size:.78rem}
+.v6-voice-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:10px}
+.v6-voice-controls button,.v6-voice-commands button{min-width:0;padding:9px 8px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);color:var(--ink);font:inherit;font-size:.75rem;text-align:left;cursor:pointer}
+.v6-voice-controls button:enabled:hover,.v6-voice-commands button:hover{border-color:var(--accent);background:var(--accent-soft)}
+.v6-voice-controls button:disabled{opacity:.42;cursor:not-allowed}
+.v6-voice-commands{display:grid;gap:6px;margin-top:10px}
+.v6-voice-commands button{width:100%}
+.v6-voice-commands button:last-child{border-color:var(--accent-line);color:var(--accent)}
+#v6-voice-note{margin:10px 0 0;padding:9px;border-radius:9px;background:var(--surface-2);color:var(--muted);font-size:.72rem;line-height:1.5;overflow-wrap:anywhere}
+@media(max-width:760px){.v6-voice-panel{margin:12px}.v6-voice-details>summary{padding:11px}}
+
+/* V3.2 mobile sidebar fix: keep the IPv6 assistant reachable and scroll only the navigation list. */
+@media (max-width: 1020px) {
+  .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: min(88vw, 360px);
+    height: 100vh;
+    height: 100dvh;
+    max-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    overscroll-behavior: contain;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* The navigation is the flexible, independently scrollable region. */
+  .sidebar > .nav-list {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-gutter: stable;
+    padding-bottom: 14px;
+  }
+
+  .sidebar > .sidebar-foot,
+  .sidebar > #v6-voice-panel {
+    flex: 0 0 auto;
+  }
+
+  #v6-voice-panel {
+    max-height: min(42dvh, 360px);
+    margin: 8px 0 0;
+    overflow: hidden;
+  }
+
+  #v6-voice-details[open] .voice-content {
+    max-height: min(30dvh, 250px);
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 760px) {
+  /* Override the earlier mobile rule that expanded the nav list beyond the sidebar. */
+  .sidebar > .nav-list {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
+  }
+  #v6-voice-panel { flex-shrink: 0; }
+}
+
+/* V3.3 MOBILE SIDEBAR SCROLL FIX
+   On narrow screens the entire sidebar is one natural scroll surface.
+   This deliberately replaces the earlier nested nav/voice scroll regions,
+   which could trap touch scrolling before the user reached the end of the
+   expanded IPv6 voice assistant. */
+@media (max-width: 1020px) {
+  .sidebar {
+    position: fixed !important;
+    inset: 0 auto 0 0 !important;
+    display: block !important;
+    width: min(88vw, 360px) !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    padding-top: max(18px, env(safe-area-inset-top, 0px)) !important;
+    padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px)) !important;
+    scrollbar-gutter: stable;
+  }
+
+  /* Do not create a second, nested scroll area inside the sidebar. */
+  .sidebar > .brand,
+  .sidebar > .sidebar-course,
+  .sidebar > .nav-list,
+  .sidebar > .sidebar-foot,
+  .sidebar > #v6-voice-panel {
+    flex: none !important;
+    min-height: auto !important;
+    max-height: none !important;
+  }
+
+  .sidebar > .nav-list {
+    height: auto !important;
+    overflow: visible !important;
+    overscroll-behavior: auto;
+    padding-bottom: 4px;
+    margin-bottom: 8px;
+  }
+
+  .sidebar > .sidebar-foot {
+    margin-top: 14px !important;
+    margin-bottom: 8px !important;
+  }
+
+  #v6-voice-panel {
+    display: block !important;
+    width: auto !important;
+    max-height: none !important;
+    margin: 8px 0 8px !important;
+    overflow: visible !important;
+  }
+
+  #v6-voice-details,
+  #v6-voice-details[open] {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  #v6-voice-details[open] .voice-content {
+    max-height: none !important;
+    overflow: visible !important;
+    overscroll-behavior: auto;
+    -webkit-overflow-scrolling: auto;
+  }
+}
+
+
+/* V3.4 — match the IPv4 assistant layout on compact screens.
+   The navigation owns the flexible scroll region. The assistant card stays
+   anchored below the readiness status; when expanded, only its command body
+   scrolls, while the summary/header remains visible. */
+@media (max-width: 1020px) {
+  .sidebar {
+    position: fixed !important;
+    inset: 0 auto 0 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: min(88vw, 360px) !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    min-height: 0 !important;
+    max-height: 100dvh !important;
+    overflow: hidden !important;
+    padding-top: max(18px, env(safe-area-inset-top, 0px)) !important;
+    padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px)) !important;
+    overscroll-behavior: contain;
+  }
+
+  .sidebar > .brand,
+  .sidebar > .sidebar-course {
+    flex: 0 0 auto !important;
+    min-height: auto !important;
+  }
+
+  .sidebar > .nav-list {
+    flex: 1 1 0 !important;
+    min-height: 72px !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-gutter: stable;
+    padding: 2px 3px 12px 0 !important;
+  }
+
+  .sidebar > .sidebar-foot {
+    flex: 0 0 auto !important;
+    margin-top: 6px !important;
+    margin-bottom: 0 !important;
+  }
+
+  #v6-voice-panel {
+    display: block !important;
+    flex: 0 0 auto !important;
+    width: auto !important;
+    max-height: none !important;
+    margin: 8px 0 0 !important;
+    overflow: hidden !important;
+  }
+
+  #v6-voice-details,
+  #v6-voice-details[open] {
+    display: block !important;
+    max-height: none !important;
+    overflow: hidden !important;
+  }
+
+  #v6-voice-details > .voice-summary {
+    position: relative;
+    min-height: 58px;
+  }
+
+  #v6-voice-details[open] > .voice-content {
+    display: block !important;
+    max-height: min(42dvh, 340px) !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-gutter: stable;
+    padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* The desktop layout follows the same pinned-card / scrollable-nav model. */
+@media (min-width: 1021px) {
+  .sidebar { overflow: hidden; min-height: 0; }
+  .sidebar > .nav-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .sidebar > .sidebar-foot,
+  .sidebar > #v6-voice-panel { flex: 0 0 auto; }
+  #v6-voice-details[open] > .voice-content {
+    max-height: min(42vh, 340px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+}

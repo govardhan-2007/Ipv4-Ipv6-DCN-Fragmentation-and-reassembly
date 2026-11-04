@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IPv6 Overview | DCN Virtual Laboratory</title>
+<meta name="theme-color" content="#0b1030">
+<meta name="description" content="Experiment 05: IPv6 fragmentation and reassembly virtual laboratory (DCN V-Lab).">
+<script>
+  (function () {
+    try {
+      var savedTheme = localStorage.getItem('dcn-vlab-theme');
+      document.documentElement.setAttribute('data-theme', savedTheme === 'dark' ? 'dark' : 'light');
+    } catch (error) {
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+  }());
+</script>
+<link rel="stylesheet" href="css/lab.css">
+<link rel="stylesheet" href="css/v6.css">
+</head>
+<body data-page="index">
+<a class="skip-link" href="#main">Skip to content</a>
+<noscript><p class="noscript">This virtual lab needs JavaScript. Please enable it in your browser.</p></noscript>
+
+<div class="app" id="app">
+
+  <nav class="sidebar" id="sidebar" aria-label="Lab sections">
+    <a class="brand" href="index.html" aria-label="IPv6 experiment overview">
+      <span class="brand-mark" aria-hidden="true"><span></span></span>
+      <span class="brand-text"><strong>DCN <b>V-LAB</b></strong><small>Engineering learning environment</small></span>
+    </a>
+    <div class="sidebar-course">
+      <span class="sidebar-course-label">Course module</span>
+      <strong>Data Communication<br>&amp; Networking</strong>
+      <span class="sidebar-course-meta">Network layer <i></i> Experiment 05 · IPv6</span>
+    </div>
+    <ul class="nav-list">
+      <li class="nav-label">Learn</li>
+      <li><a class="nav-btn active" data-index="01" href="index.html" aria-current="page">Overview</a></li>
+      <li><a class="nav-btn" data-index="02" href="theory.html">Theory and concepts</a></li>
+      <li class="nav-label">Experiment workspace</li>
+      <li><a class="nav-btn" data-index="03" href="setup.html">Packet configuration</a></li>
+      <li><a class="nav-btn" data-index="04" href="simulation.html">Live simulation</a></li>
+      <li><a class="nav-btn" data-index="05" href="headers.html">Packet header inspector</a></li>
+      <li><a class="nav-btn" data-index="06" href="reassembly.html">Reassembly lab</a></li>
+      <li><a class="nav-btn" data-index="07" href="results.html">Results and analysis</a></li>
+      <li class="nav-label">Assessment</li>
+      <li><a class="nav-btn" data-index="08" href="quiz.html">Knowledge check</a></li>
+      <li class="nav-label">Other experiment</li>
+      <li><a class="nav-btn nav-btn-ext" data-index="E4" href="../index.html">IPv4 fragmentation lab <span class="nav-external-mark" aria-hidden="true">↗</span></a></li>
+    </ul>
+    <div class="sidebar-foot">
+      <span class="sidebar-foot-mark" aria-hidden="true">✓</span>
+      <div><strong>Ready for self-study</strong><small>Runs in a modern browser</small></div>
+    </div>
+  </nav>
+
+  <button class="menu-toggle" id="menu-toggle" aria-controls="sidebar" aria-expanded="false">Menu</button>
+
+  <main class="content" id="main" tabindex="-1">
+    <header class="portal-header" aria-label="Virtual laboratory header">
+      <div class="portal-breadcrumb">
+        <span class="portal-brand-tag">V-LAB</span>
+        <span class="breadcrumb-course">Data Communication &amp; Networking</span>
+        <span class="breadcrumb-separator" aria-hidden="true">/</span>
+        <strong id="portal-page-name">Overview</strong>
+      </div>
+      <div class="portal-actions">
+        <button class="cmdk-hint" id="cmdk-open" type="button" aria-label="Jump to a page (Ctrl or Command + K)">Jump to <kbd>Ctrl K</kbd></button>
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to dark mode" title="Switch to dark mode">
+          <span class="theme-toggle-symbol" aria-hidden="true">☾</span>
+          <span class="theme-toggle-label">Dark mode</span>
+          <span class="theme-toggle-track" aria-hidden="true"><span></span></span>
+        </button>
+        <div class="portal-status"><span class="portal-status-dot" aria-hidden="true"></span><span>Interactive module</span><i></i><span>Experiment 05</span></div>
+      </div>
+      <div class="reading-progress" id="reading-progress" aria-hidden="true"><span id="reading-progress-fill"></span></div>
+    </header>
+
+    <section class="lab-section active" id="sec-home" aria-labelledby="h-page">
+
+      <header class="hero hero-home">
+        <div class="hero-main">
+          <div class="hero-eyebrow"><span class="hero-eyebrow-mark"></span> Network layer <span class="hero-eyebrow-divider"></span> Experiment 5</div>
+          <p class="meta">Data Communication and Networking</p>
+          <h1 id="h-page">IPv6 fragmentation<br><em>&amp; reassembly</em></h1>
+          <p class="lead">Explore why an IPv6 router never fragments a packet. Watch it send back an ICMPv6 Packet Too Big message, let the source build fragments with a Fragment Extension Header, and see the destination put them back together.</p>
+          <div class="btn-row">
+            <a class="btn primary" href="setup.html" id="btn-start-experiment"><span class="btn-icon" aria-hidden="true">▶</span> Start experiment</a>
+            <a class="btn btn-quiet" href="theory.html">Review the theory <span aria-hidden="true">↗</span></a>
+          </div>
+          <div class="hero-assurance"><span class="assurance-check">✓</span> Browser-based virtual experiment <span class="assurance-divider"></span> No backend required</div>
+        </div>
+        <aside class="hero-stage v6-scene" aria-label="Animated example: a 4000-byte packet is dropped by the router, the source receives Packet Too Big, fragments the packet itself, and the destination rebuilds it">
+          <svg class="stage-svg" viewBox="0 36 560 214" aria-hidden="true" focusable="false">
+            <line class="hs-wire" x1="108" y1="140" x2="238" y2="140"/>
+            <line class="hs-wire" x1="322" y1="140" x2="452" y2="140"/>
+            <g class="hs-node hs-src"><rect x="20" y="96" width="88" height="88" rx="18"/>
+              <g class="hs-ico" transform="translate(64 132)"><rect x="-17" y="-13" width="34" height="23" rx="4"/><path d="M-8 17h16M0 10v7"/></g>
+              <text x="64" y="212">Source</text></g>
+            <g class="hs-node hs-rtr"><rect x="238" y="96" width="84" height="88" rx="18"/>
+              <g class="hs-ico" transform="translate(280 134)"><rect x="-18" y="-3" width="36" height="14" rx="4"/><path d="M-10 -3l-5-12M10 -3l5-12"/><circle cx="-8" cy="4" r="1.6"/><circle cx="-1" cy="4" r="1.6"/></g>
+              <text x="280" y="212">Router</text>
+              <text x="280" y="231" class="hs-sub">Path MTU 1500</text></g>
+            <g class="hs-node hs-dst"><rect x="452" y="96" width="88" height="88" rx="18"/>
+              <g class="hs-ico" transform="translate(496 134)"><rect x="-16" y="-15" width="32" height="13" rx="3"/><rect x="-16" y="2" width="32" height="13" rx="3"/><circle cx="-9" cy="-8.5" r="1.5"/><circle cx="-9" cy="8.5" r="1.5"/></g>
+              <text x="496" y="212">Destination</text></g>
+            <g class="hs-big"><rect x="116" y="127" width="70" height="26" rx="7"/><text x="151" y="144">4000 B</text></g>
+            <g class="hs-x"><circle cx="280" cy="140" r="17"/><path d="M272 132l16 16M288 132l-16 16"/></g>
+            <g class="hs-ptb"><rect x="204" y="98" width="68" height="22" rx="6"/><text x="238" y="113">PTB 1500</text></g>
+            <g class="hs-frag hs-f1" style="--dy:-34px"><rect x="120" y="129" width="46" height="22" rx="6"/><text x="143" y="144">1448</text></g>
+            <g class="hs-frag hs-f2" style="--dy:0px"><rect x="120" y="129" width="46" height="22" rx="6"/><text x="143" y="144">1448</text></g>
+            <g class="hs-frag hs-f3" style="--dy:34px"><rect x="120" y="129" width="46" height="22" rx="6"/><text x="143" y="144">1064</text></g>
+            <g class="hs-done"><rect x="436" y="52" width="120" height="28" rx="14"/><text x="496" y="70">4000 B rebuilt</text></g>
+          </svg>
+          <dl class="stage-facts">
+            <div><dt>Packet</dt><dd>4000 B</dd></div>
+            <div><dt>Path MTU</dt><dd>1500 B</dd></div>
+            <div><dt>Fragments</dt><dd>3</dd></div>
+          </dl>
+        </aside>
+      </header>
+
+      <div class="overview-strip" aria-label="Experiment characteristics">
+        <div class="overview-strip-item"><span class="overview-strip-icon">01</span><div><strong>Configure</strong><small>Set packet size and Path MTU</small></div></div>
+        <div class="overview-strip-item"><span class="overview-strip-icon">02</span><div><strong>Visualise</strong><small>Follow the packet, the PTB message and the fragments</small></div></div>
+        <div class="overview-strip-item"><span class="overview-strip-icon">03</span><div><strong>Investigate</strong><small>Inspect base and Fragment headers</small></div></div>
+        <div class="overview-strip-item"><span class="overview-strip-icon">04</span><div><strong>Verify</strong><small>Reassemble and analyse results</small></div></div>
+      </div>
+
+      <figure class="home-diagram">
+        <div class="figure-heading"><div><span class="figure-kicker">Network flow</span><h2>Who does what in IPv6</h2></div><span class="figure-context">IPv6 packet path</span></div>
+        <svg viewBox="0 0 720 190" role="img" aria-label="Source sends a large packet to a router. The router returns ICMPv6 Packet Too Big. The source sends small fragments through the router to the destination.">
+          <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#e0a030"/></marker></defs>
+          <line x1="140" y1="85" x2="290" y2="85" class="wire"/>
+          <line x1="430" y1="85" x2="580" y2="85" class="wire"/>
+          <g class="node n-source"><rect class="base" x="30" y="50" width="110" height="70" rx="8"/><text x="85" y="90">Source</text></g>
+          <g class="node n-router"><rect class="base" x="290" y="50" width="140" height="70" rx="8"/><text x="360" y="90">Router</text></g>
+          <g class="node n-dest"><rect class="base" x="580" y="50" width="110" height="70" rx="8"/><text x="635" y="90">Destination</text></g>
+          <rect x="166" y="72" width="90" height="26" rx="4" class="pk-big"/><text x="211" y="90" class="pk-t">4000 B</text>
+          <path d="M300 38 C 260 8, 170 8, 120 44" fill="none" stroke="#e0a030" stroke-width="2.4" stroke-dasharray="6 5" marker-end="url(#ah)"/>
+          <text x="210" y="14" class="cap" style="fill:#b7791f">ICMPv6 Packet Too Big (MTU 1500)</text>
+          <rect x="446" y="76" width="42" height="18" rx="3" class="pk-f1"/>
+          <rect x="494" y="76" width="42" height="18" rx="3" class="pk-f2"/>
+          <rect x="542" y="76" width="30" height="18" rx="3" class="pk-f3"/>
+          <text x="211" y="150" class="cap">Larger than the Path MTU: dropped</text>
+          <text x="505" y="150" class="cap">Source-made fragments: 1448 + 1448 + 1064 B</text>
+          <text x="360" y="176" class="cap">The router only forwards. It never fragments and never reassembles.</text>
+        </svg>
+        <figcaption class="diagram-caption"><span><b>Source</b> fragments after Packet Too Big</span><span class="caption-arrow">→</span><span><b>Router</b> forwards fragments intact</span><span class="caption-arrow">→</span><span><b>Destination</b> reassembles by offset</span></figcaption>
+      </figure>
+
+      <section class="workflow-section" aria-labelledby="workflow-heading">
+        <div class="section-heading"><div><span class="section-kicker">Recommended sequence</span><h2 id="workflow-heading">A guided experiment</h2></div><p>Move through the lab in four focused stages.</p></div>
+        <div class="workflow-grid">
+          <a class="workflow-card" href="theory.html"><span class="workflow-number">01</span><span class="workflow-title">Understand</span><span class="workflow-description">Review the Fragment Header, offset, M flag and Packet Too Big.</span><span class="workflow-link">Explore concepts <b>→</b></span></a>
+          <a class="workflow-card" href="setup.html"><span class="workflow-number">02</span><span class="workflow-title">Configure</span><span class="workflow-description">Choose the packet size, Path MTU and upper-layer protocol.</span><span class="workflow-link">Set parameters <b>→</b></span></a>
+          <a class="workflow-card" href="simulation.html"><span class="workflow-number">03</span><span class="workflow-title">Observe</span><span class="workflow-description">Watch the router drop, the source fragment and the destination rebuild.</span><span class="workflow-link">Open simulation <b>→</b></span></a>
+          <a class="workflow-card" href="results.html"><span class="workflow-number">04</span><span class="workflow-title">Analyse</span><span class="workflow-description">Verify every fragment field and compare with IPv4.</span><span class="workflow-link">View results <b>→</b></span></a>
+        </div>
+      </section>
+
+      <div class="section-heading learning-heading"><div><span class="section-kicker">Your learning goals</span><h2>What you will learn</h2></div></div>
+      <div class="grid-2">
+        <article class="card">
+          <h2>Objectives</h2>
+          <ul>
+            <li>Create an IPv6 packet and compare its size with the Path MTU.</li>
+            <li>See the router drop an oversized packet and send ICMPv6 Packet Too Big.</li>
+            <li>Calculate every fragment's data size, offset, M flag and length.</li>
+            <li>Rebuild the packet from fragment offsets, in order, out of order or with a loss.</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h2>Learning outcomes</h2>
+          <ul>
+            <li>Explain why only the source may fragment an IPv6 packet.</li>
+            <li>Calculate the maximum fragment data and the number of fragments.</li>
+            <li>Read the Next Header chain: base header 44, then Fragment Header.</li>
+            <li>Explain the 60-second reassembly timer and ICMPv6 Time Exceeded.</li>
+          </ul>
+        </article>
+      </div>
+      <article class="card">
+        <h2>Why does IPv6 fragment only at the source?</h2>
+        <p>In IPv4 every router on the path may fragment a datagram. IPv6 removes that work from routers: they forward faster and never keep fragments. If a packet is too big, the router drops it and tells the source the usable MTU. The source then sends smaller pieces, and only the destination reassembles them.</p>
+        <p>The default worked example is a <strong>4000-byte packet</strong> over a <strong>1500-byte Path MTU</strong>: fragment data of 1448, 1448 and 1064 bytes, offsets 0, 181 and 362, and M flags 1, 1, 0.</p>
+      </article>
+    </section>
+
+    <footer class="portal-footer">
+      <div><span class="footer-mark" aria-hidden="true">V</span><div><strong>DCN Virtual Laboratory</strong><small>Experiment 05 · IPv6 Fragmentation &amp; Reassembly</small></div></div>
+      <span class="footer-note"><a href="../index.html">Experiment 04 · IPv4</a> · Runs locally in your browser</span>
+    </footer>
+  </main>
+</div>
+<script src="js/model.js"></script>
+<script src="js/shell.js"></script>
+<script src="js/voice.js"></script>
+<script src="js/v6.js"></script>
+</body>
+</html>
