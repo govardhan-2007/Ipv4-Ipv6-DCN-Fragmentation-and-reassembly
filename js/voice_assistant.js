@@ -301,7 +301,7 @@
   }
 
   // --------------------------------------------------
-  // FEMALE-SOUNDING VOICE SELECTION
+  // MALE-SOUNDING ENGLISH VOICE SELECTION
   // --------------------------------------------------
 
   function pickVoice() {
@@ -315,14 +315,19 @@
       return v.lang && /^en(-|$)/i.test(v.lang);
     });
 
+    // Web Speech API does not expose a standard gender property.
+    // Prefer common male voice names, then fall back to English voices.
     var preferredNames =
-      /zira|samantha|aria|jenny|female|susan|hazel|heera|veena|sonia|libby|natasha|ava|allison|karen|victoria|tessa|moira|fiona|google.*female|microsoft.*(zira|aria|jenny)/i;
+      /david|mark|guy|daniel|james|george|ryan|alex|tom|aaron|fred|oliver|lee|male/i;
 
     voice = englishVoices.find(function (v) {
       return preferredNames.test(v.name || '');
     }) ||
     englishVoices.find(function (v) {
       return /^en-IN/i.test(v.lang);
+    }) ||
+    englishVoices.find(function (v) {
+      return /^en-GB/i.test(v.lang);
     }) ||
     englishVoices.find(function (v) {
       return /^en-US/i.test(v.lang);

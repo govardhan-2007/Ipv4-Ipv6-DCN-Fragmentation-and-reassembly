@@ -70,8 +70,19 @@
       var opt = document.createElement('option'); opt.value = v.name; opt.textContent = v.name + ' · ' + v.lang; select.appendChild(opt);
     });
     if (!select.options.length) { var opt = document.createElement('option'); opt.value = ''; opt.textContent = 'Default browser voice'; select.appendChild(opt); }
-    voice = list.find(function (v) { return v.name === saved; }) || list.find(function (v) { return /female|zira|samantha|aria|jenny|susan|hazel|google.*female/i.test(v.name) && /^en/i.test(v.lang); }) || list.find(function (v) { return /^en-IN/i.test(v.lang); }) || list.find(function (v) { return /^en/i.test(v.lang); }) || null;
-    if (voice) select.value = voice.name;
+    var englishVoices = list.filter(function (v) { return /^en(-|$)/i.test(v.lang); });
+    var maleName = /david|mark|guy|daniel|james|george|ryan|alex|tom|aaron|fred|oliver|lee|male/i;
+    var savedVoice = list.find(function (v) { return v.name === saved; });
+    voice = (savedVoice && maleName.test(savedVoice.name || '') && /^en/i.test(savedVoice.lang) ? savedVoice : null) ||
+      englishVoices.find(function (v) { return maleName.test(v.name || ''); }) ||
+      englishVoices.find(function (v) { return /^en-IN/i.test(v.lang); }) ||
+      englishVoices.find(function (v) { return /^en-GB/i.test(v.lang); }) ||
+      englishVoices.find(function (v) { return /^en-US/i.test(v.lang); }) ||
+      englishVoices[0] || list[0] || null;
+    if (voice) {
+      select.value = voice.name;
+      try { localStorage.setItem(VOICE_KEY, voice.name); } catch (e) {}
+    }
   }
   function speak(text) {
     lastText = text; setNote(text);
