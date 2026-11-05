@@ -91,6 +91,7 @@ The lab is a static folder: HTML, CSS, JavaScript and SVG. It makes no network r
 * **Shortcuts** (on the simulation page): **Space** start / pause / resume, **→** step, **R** reset.
 * **When a run ends** a banner offers the sensible next step (Reassemble, Inspect a header, View results). After a DF drop it offers **Clear DF and run again**.
 * The animation pauses automatically if you leave the page or switch tabs, so it never plays or narrates unseen.
+* **Settings** (section 10, gear icon, key **0**): theme, accent colour, text size, high contrast, reduce motion, sidebar mode (**B** hides it), default speed, auto-start, Identification format, initial TTL, reassembly timeout, export/import. See RELEASE_NOTES_V4_1.md.
 * On phones the stage scrolls sideways (kept legible) and follows the action.
 
 ### Adding the demo video
@@ -164,10 +165,12 @@ dcn_virtual_lab/
 │   ├── packet_inspector.js    32-bit header diagram and field explanations
 │   ├── network_animation.js   SVG topology animation (play, pause, step, reset)
 │   ├── voice_assistant.js     Text-to-speech narration and voice commands
+│   ├── settings.js            Settings store, sidebar modes and groups, progress, Settings page
 │   ├── app.js                 Navigation, setup, scenarios, results, reassembly lab
 │   └── ui_enhancements.js     Theme, fragment map, pager, section finder, simulation shortcuts
 ├── tests/
-│   └── fragmentation.test.js  Plain Node tests (no framework)
+│   ├── fragmentation.test.js  Plain Node tests (no framework)
+│   └── settings_smoke.py      Browser test for Settings and sidebar (optional, needs Playwright)
 └── assets/
     ├── images/                (empty, for your own images)
     ├── icons/                 (empty)

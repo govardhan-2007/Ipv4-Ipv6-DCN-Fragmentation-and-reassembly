@@ -183,7 +183,7 @@
         setCaption('The source host builds the original IPv4 datagram.');
         emit({
           text: 'Source creates a ' + p.datagramSize + '-byte IPv4 datagram: ' + p.headerLength + '-byte header + ' +
-            result.originalPayloadSize + '-byte payload. Identification ' + result.identification + ', DF = ' + p.df +
+            result.originalPayloadSize + '-byte payload. Identification ' + (window.VLab && VLab.Settings ? VLab.Settings.fmtId(result.identification) : result.identification) + ', DF = ' + p.df +
             ', TTL ' + o.ttl + '.',
           type: 'info', progress: 0
         });

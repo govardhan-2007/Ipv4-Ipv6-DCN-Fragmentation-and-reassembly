@@ -13,7 +13,10 @@
   var themeSymbol = themeButton && themeButton.querySelector('.theme-toggle-symbol');
   var themeLabel = themeButton && themeButton.querySelector('.theme-toggle-label');
   var pageLabel = document.getElementById('portal-page-name');
-  var navButtons = Array.prototype.slice.call(document.querySelectorAll('.nav-btn[data-section]'));
+  var navButtons = Array.prototype.slice.call(document.querySelectorAll('.nav-btn[data-section]')).filter(function (b) { return b.getAttribute('data-section') !== 'settings'; });
+  var settingsButton = document.querySelector('.nav-btn[data-section="settings"]');
+  function lab() { return window.VLab && window.VLab.Settings; }          // settings.js is optional
+  function shortcutsOn() { return !lab() || lab().get().shortcuts; }
   var progressFill = document.getElementById('reading-progress-fill');
   var scrollPending = false;
   var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -49,7 +52,7 @@
   applyTheme(readTheme(), false);
   if (themeButton) {
     themeButton.addEventListener('click', function () {
-      applyTheme(readTheme() === 'dark' ? 'light' : 'dark', true);
+      if (lab()) lab().toggleTheme(); else applyTheme(readTheme() === 'dark' ? 'light' : 'dark', true);
     });
   }
 
@@ -62,7 +65,7 @@
   /** A running animation keeps playing (and narrating) unseen if the student leaves its page: hold it instead. */
   function holdSimulationIfHidden() {
     var anim = window.VLab && window.VLab.Animation;
-    if (anim && anim.getState() === 'running' && (!simulationVisible() || document.hidden)) anim.pause();
+    if (anim && anim.getState() === 'running' && (!simulationVisible() || (document.hidden && (!lab() || lab().get().pauseHidden)))) anim.pause();
   }
   document.addEventListener('visibilitychange', holdSimulationIfHidden);
 
@@ -112,7 +115,7 @@
   /* ───────── Button ripple ───────── */
   document.addEventListener('click', function (event) {
     var button = event.target.closest('.btn, .nav-btn, .theme-toggle');
-    if (!button || button.disabled || reduceMotion || !event.clientX) return;
+    if (!button || button.disabled || reduceMotion || root.getAttribute('data-motion') === 'reduce' || !event.clientX) return;
     var rect = button.getBoundingClientRect();
     var ripple = document.createElement('span');
     var size = Math.max(rect.width, rect.height) * 1.15;
@@ -270,6 +273,8 @@
   navButtons.forEach(function (button, i) {
     items.push({ label: button.textContent.trim(), hint: 'Section ' + (i + 1), run: function () { button.click(); } });
   });
+  if (settingsButton) items.push({ label: 'Settings', hint: '0', run: function () { settingsButton.click(); } });
+  items.push({ label: 'Show or hide the sidebar', hint: 'B', run: function () { if (lab()) lab().toggleSidebar(); } });
   items.push({ label: 'Toggle light / dark theme', hint: 'D', run: function () { if (themeButton) themeButton.click(); } });
 
   function draw() {
@@ -332,8 +337,10 @@
       if (palette.classList.contains('open')) closePalette(); else openPalette();
       return;
     }
+    if ((event.ctrlKey || event.metaKey) && key === 'b' && lab()) { event.preventDefault(); lab().toggleSidebar(); return; }
     if (event.altKey || event.ctrlKey || event.metaKey) return;
     if (isEditing(event.target) || palette.classList.contains('open')) return;
+    if (!shortcutsOn()) return;
     if (simulationVisible()) {
       var focused = document.activeElement;
       var onControl = focused && /^(BUTTON|A|SUMMARY)$/.test(focused.tagName);
@@ -348,6 +355,8 @@
     }
     if (key === 'd' && themeButton) { event.preventDefault(); themeButton.click(); }
     else if (key === '/') { event.preventDefault(); openPalette(); }
+    else if (key === 'b' && lab()) { event.preventDefault(); lab().toggleSidebar(); }
+    else if (key === '0' && settingsButton) { settingsButton.click(); }
     else if (/^[1-9]$/.test(key) && navButtons[Number(key) - 1]) { navButtons[Number(key) - 1].click(); }
   });
 }());

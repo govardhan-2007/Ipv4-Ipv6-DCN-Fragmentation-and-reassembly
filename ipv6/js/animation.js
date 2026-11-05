@@ -17,7 +17,7 @@
 
   var NS = 'http://www.w3.org/2000/svg';
   var GEO = { y: 150, stackX: 224, routerStop: 338, destX: 738, bufX: 750, bufW: 120, bufY: 214, bufH: 14 };
-  var reduceMotion = !!(root.matchMedia && root.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  function reduceMotion() { return root.V6 && root.V6.settings ? root.V6.settings.reducedMotion() : !!(root.matchMedia && root.matchMedia('(prefers-reduced-motion: reduce)').matches); }
 
   var LABELS = {
     'create': 'Create packet', 'to-router': 'Cross Link A', 'check': 'Router checks MTU',
@@ -70,6 +70,13 @@
     ctx.big = glyph(packets, 'original', 100, 28, cfg.packetSize + ' B');
     ctx.ptb = glyph(icmp, 'icmp', 92, 24, 'PTB · MTU ' + cfg.mtu);
     ctx.rebuilt = glyph(packets, 'rebuilt', 150, 28, cfg.packetSize + ' B rebuilt');
+    ctx.gauge = el('g', { opacity: 0 });
+    ctx.gauge.appendChild(el('rect', { 'class': 'gauge-track', x: 380, y: 88, width: 140, height: 6, rx: 3 }));
+    ctx.gaugeFill = el('rect', { 'class': 'gauge-fill ok', x: 380, y: 88, width: 0, height: 6, rx: 3 });
+    ctx.gauge.appendChild(ctx.gaugeFill);
+    ctx.gaugeTick = el('line', { 'class': 'gauge-tick', x1: 380, x2: 380, y1: 84, y2: 98 });
+    ctx.gauge.appendChild(ctx.gaugeTick);
+    packets.appendChild(ctx.gauge);
     ctx.callout = el('text', { x: 270, y: 70, 'class': 'router-check', 'text-anchor': 'middle' });
     packets.appendChild(ctx.callout);
     if (fragmented) {
@@ -112,12 +119,20 @@
     ctx.bufLabel.textContent = 'Buffer: ' + bytes + ' of ' + calc.fragmentable + ' B';
   }
 
+  function gauge(fillProgress) {
+    var maxv = Math.max(cfg.packetSize, cfg.mtu), full = 140 * cfg.packetSize / maxv, tick = 140 * cfg.mtu / maxv;
+    ctx.gauge.setAttribute('opacity', 1);
+    ctx.gaugeFill.setAttribute('width', (full * fillProgress).toFixed(1));
+    ctx.gaugeFill.setAttribute('class', 'gauge-fill ' + (cfg.packetSize > cfg.mtu ? 'bad' : 'ok'));
+    ctx.gaugeTick.setAttribute('x1', (380 + tick).toFixed(1)); ctx.gaugeTick.setAttribute('x2', (380 + tick).toFixed(1));
+  }
+
   function draw(name, t) {
     // reset everything, then let the stage draw what it needs
     hide(ctx.big); hide(ctx.ptb); hide(ctx.rebuilt); ctx.callout.textContent = '';
     ctx.big.setAttribute('class', 'pkt original');
     ctx.frags.forEach(function (g) { hide(g); g.setAttribute('class', 'pkt ' + g.getAttribute('class').split(' ').filter(function (c) { return /^fc-/.test(c); }).join(' ')); });
-    routerText(''); setBuffer(0);
+    routerText(''); setBuffer(0); ctx.gauge.setAttribute('opacity', 0);
     var Y = GEO.y, n = fragmented ? calc.fragments.length : 0;
 
     if (name === 'create') {
@@ -128,6 +143,7 @@
       place(ctx.big, lerp(GEO.stackX, GEO.routerStop, ease(t)), Y, 1, 1);
       setNodes(t < 0.25 ? 'active' : '', t > 0.7 ? 'active' : '', '');
     } else if (name === 'check') {
+      gauge(ease(clamp01(t / 0.45)));
       if (fragmented) {
         var drop = clamp01((t - 0.45) / 0.45);
         ctx.big.setAttribute('class', 'pkt original' + (t >= 0.45 ? ' dropped' : ''));
@@ -141,6 +157,7 @@
         setNodes('', 'active', '');
       }
     } else if (name === 'ptb') {
+      gauge(1);
       place(ctx.ptb, lerp(372, 196, ease(t)), 110, 1, 1);
       routerText('ICMPv6 Packet Too Big');
       setNodes(t > 0.8 ? 'active' : '', t > 0.8 ? '' : 'alert', '');
@@ -208,7 +225,7 @@
   /* ───────── engine ───────── */
   function setState(next) { state = next; cb.onState(state); }
   function stageInfo() { return { index: stageIndex, name: stages[stageIndex].name, label: LABELS[stages[stageIndex].name], count: stages.length }; }
-  function dur(s) { return reduceMotion ? Math.min(220, s.dur * 0.1) : s.dur; }
+  function dur(s) { return reduceMotion() ? Math.min(220, s.dur * 0.1) : s.dur; }
 
   function schedule() { if (raf === null) raf = root.requestAnimationFrame(tick); }
   function cancel() { if (raf !== null) { root.cancelAnimationFrame(raf); raf = null; } }
@@ -280,12 +297,26 @@
       if (!cfg) return; cancel(); fstate = fstate.map(function () { return 'pending'; });
       showIdle(); setState('idle'); cb.onEvent({ type: 'reset' });
     },
+    /** Jump to the start of stage i. Earlier stages are replayed instantly (no drawing) so the log, workings and tray stay correct. */
+    goTo: function (i) {
+      if (!cfg) return; i = Math.max(0, Math.min(stages.length - 1, i | 0));
+      cancel(); showIdle(); fstate = fstate.map(function () { return 'pending'; });
+      cb.onEvent({ type: 'restart' }); setState('stepping');
+      for (var j = 0; j < i; j++) {
+        stageIndex = j; var info = stageInfo();
+        cb.onEvent({ type: 'stageStart', stage: info, replay: true });
+        if (stages[j].name === 'fragment' || (stages[j].name === 'travel' && fragmented)) { for (var k = 0; k < fstate.length; k++) syncFrag(k, stages[j].name === 'fragment' ? 'created' : 'arrived'); }
+        cb.onEvent({ type: 'stageDone', stage: info, replay: true });
+      }
+      beginStage(i);
+    },
+    back: function () { if (!cfg || state === 'idle') return; api.goTo(Math.max(0, stageIndex - 1)); },
     setSpeed: function (x) { speed = Math.max(0.25, Math.min(3, Number(x) || 1)); },
     getState: function () { return state; },
     getStages: function () { return stages.map(function (s) { return { name: s.name, label: LABELS[s.name] }; }); },
     getStageIndex: function () { return stageIndex; }
   };
 
-  document.addEventListener('visibilitychange', function () { if (document.hidden && state === 'running') api.pause(); });
+  document.addEventListener('visibilitychange', function () { var keep = root.V6 && root.V6.settings && !root.V6.settings.get().pauseHidden; if (document.hidden && state === 'running' && !keep) api.pause(); });
   root.V6Anim = api;
 }(window));

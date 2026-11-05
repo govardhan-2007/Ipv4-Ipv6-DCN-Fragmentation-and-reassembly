@@ -1,5 +1,10 @@
 # Changelog
 
+## V4.1 – IPv4 Settings tab and sidebar
+- Added a Settings page to the IPv4 lab (appearance, sidebar, simulation, protocol values, data) matching the IPv6 lab.
+- Collapsible sidebar groups, Compact and Hidden sidebar modes, mobile drawer close button, visited-page dots and progress footer.
+- Protocol settings: Identification format, initial TTL, reassembly timeout. See RELEASE_NOTES_V4_1.md.
+
 ## Simulation UI and bug-fix release
 
 ### Simulation UI

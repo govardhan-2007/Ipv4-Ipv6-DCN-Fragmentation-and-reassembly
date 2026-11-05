@@ -89,13 +89,15 @@
    * (fragments are grouped by source, destination and Identification).
    * Placement is by Fragment Offset x 8, never by arrival order.
    */
-  function createReassembly(calcResult) {
+  function createReassembly(calcResult, options) {
+    var TIMEOUT = Math.max(1, Math.round(Number(options && options.timeout) || REASSEMBLY_TIMEOUT_S));
     var frags = calcResult.fragments || [];
     var st = {
       received: [],          // fragment numbers in arrival order (first copy only)
       duplicates: 0,
       arrivals: [],          // every arrival, including duplicates
       clock: 0,              // seconds since the first fragment arrived
+      timeout: TIMEOUT,      // reassembly timer length (60 s by default, RFC 8200)
       status: 'waiting',     // waiting | partial | complete | timeout
       icmp: null,
       ranges: [],
@@ -139,8 +141,8 @@
     /** Move the reassembly clock forward. Discards an incomplete datagram at 60 s. */
     function advance(seconds) {
       if (st.status === 'complete' || st.status === 'timeout' || !st.received.length) return st;
-      st.clock = Math.min(REASSEMBLY_TIMEOUT_S, st.clock + seconds);
-      if (st.clock >= REASSEMBLY_TIMEOUT_S) {
+      st.clock = Math.min(TIMEOUT, st.clock + seconds);
+      if (st.clock >= TIMEOUT) {
         st.status = 'timeout';
         // RFC 8200 s4.5: ICMPv6 Time Exceeded (Type 3, Code 1) only if fragment with offset 0 arrived.
         st.icmp = st.received.indexOf(1) !== -1
@@ -156,7 +158,7 @@
     }
 
     return { state: st, receive: receive, advance: advance, reset: reset, gaps: gapList,
-      receivedBytes: function () { return st.ranges.reduce(function (s, r) { return s + (r[1] - r[0]); }, 0); } };
+      timeout: TIMEOUT, receivedBytes: function () { return st.ranges.reduce(function (s, r) { return s + (r[1] - r[0]); }, 0); } };
   }
 
   function protocolName(n) { return ({ 6: 'TCP', 17: 'UDP', 58: 'ICMPv6' })[n] || 'Unknown'; }

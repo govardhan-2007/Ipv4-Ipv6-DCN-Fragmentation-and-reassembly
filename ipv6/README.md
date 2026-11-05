@@ -1,8 +1,8 @@
-# Experiment 05 — IPv6 Fragmentation & Reassembly (V3.0)
+# Experiment 05 — IPv6 Fragmentation & Reassembly (V4.0)
 
-A separate multi-page IPv6 laboratory with the same look and controls as Experiment 04. It does not modify the IPv4 simulator. See RELEASE_NOTES_V3_0.md.
+A separate multi-page IPv6 laboratory with the same look and controls as Experiment 04. It does not modify the IPv4 simulator. See RELEASE_NOTES_V4_0.md.
 
-Files: `css/lab.css` (shared design system), `css/v6.css`, `js/model.js` (pure logic), `js/shell.js`, `js/animation.js`, `js/v6.js`.
+Files: `css/lab.css` (shared design system), `css/v6.css`, `css/theme.css` (hue-driven colours), `css/ui.css` (sidebar modes, settings), `js/model.js` (pure logic), `js/shell.js`, `js/animation.js`, `js/v6.js`.
 
 ## Pages
 - `index.html` — IPv6 overview

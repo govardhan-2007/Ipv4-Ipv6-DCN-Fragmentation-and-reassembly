@@ -21,6 +21,11 @@
   var Checksum = root.VLab.Checksum;
 
   var DEFAULT_FIELD = 'fragoff';
+  /* Identification is shown in the format chosen in Settings; the other base is the small caption. */
+  function hex4(n) { return '0x' + ('0000' + Number(n).toString(16).toUpperCase()).slice(-4); }
+  function idIsHex() { var S = window.VLab && window.VLab.Settings; return !!S && S.get().idFormat === 'hex'; }
+  function idMain(n) { return idIsHex() ? hex4(n) : String(n); }
+  function idSub(n) { return idIsHex() ? String(n) : hex4(n); }
   var FRAGMENTATION_FIELDS = { identification: true, flags: true, fragoff: true };
 
   var result = null;
@@ -80,11 +85,11 @@
     ]);
 
     rows.push([
-      { id: 'identification', name: 'Identification', span: 16, vals: [String(pk.identification)],
-        sub: '0x' + ('0000' + pk.identification.toString(16).toUpperCase()).slice(-4), frag: true,
+      { id: 'identification', name: 'Identification', span: 16, vals: [idMain(pk.identification)],
+        sub: idSub(pk.identification), frag: true,
         explain: { title: 'Identification (16 bits)',
           text: 'A number chosen by the source for this datagram. Every fragment copies the same value, so the destination can tell which fragments belong together. It groups fragments using source address, destination address, protocol and this Identification.',
-          eq: 'all fragments carry Identification = ' + pk.identification } },
+          eq: 'all fragments carry Identification = ' + idMain(pk.identification) } },
       { id: 'flags', name: 'Flags', span: 3, vals: ['DF ' + pk.df, 'MF ' + pk.mf], frag: true,
         explain: { title: 'Flags (3 bits: reserved, DF, MF)',
           text: 'The first bit is reserved and always 0. ' +

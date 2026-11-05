@@ -47,10 +47,24 @@ test('fragment invariants across many sizes', () => {
 });
 test('all IPv6 pages exist, have unique ids and valid local links', () => {
   const dir = path.join(__dirname, '..', 'ipv6');
-  ['index', 'theory', 'setup', 'simulation', 'headers', 'reassembly', 'results', 'quiz'].forEach(p => {
+  ['index', 'theory', 'setup', 'simulation', 'headers', 'reassembly', 'results', 'quiz', 'settings'].forEach(p => {
     const html = fs.readFileSync(path.join(dir, p + '.html'), 'utf8');
     const ids = [...html.matchAll(/ id="([^"]+)"/g)].map(m => m[1]);
     assert.equal(new Set(ids).size, ids.length, p + ' has duplicate ids');
     [...html.matchAll(/(?:href|src)="([^"#:]+)"/g)].forEach(m => assert.ok(fs.existsSync(path.join(dir, m[1])), p + ' broken link ' + m[1]));
   });
+});
+
+test('reassembly timeout is configurable', () => {
+  const e = M.createReassembly(M.calculate(4000, 1500, 7), { timeout: 20 });
+  e.receive(1); e.advance(19); assert.equal(e.state.status, 'partial');
+  e.advance(1); assert.equal(e.state.status, 'timeout'); assert.equal(e.timeout, 20);
+});
+test('every page shares the same navigation and links the settings page', () => {
+  const dir = path.join(__dirname, '..', 'ipv6');
+  const navOf = p => [...fs.readFileSync(path.join(dir, p + '.html'), 'utf8').matchAll(/class="nav-btn[^"]*" data-index="(\w+)" href="([^"]+)"/g)].map(m => m[1] + m[2]).join('|');
+  const pages = ['index', 'theory', 'setup', 'simulation', 'headers', 'reassembly', 'results', 'quiz', 'settings'];
+  const first = navOf(pages[0]);
+  pages.forEach(p => assert.equal(navOf(p), first, p + ' nav differs'));
+  assert.ok(first.includes('09settings.html'));
 });

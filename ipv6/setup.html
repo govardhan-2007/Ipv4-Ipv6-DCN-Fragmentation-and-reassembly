@@ -4,20 +4,31 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Packet configuration | DCN Virtual Laboratory</title>
-<meta name="theme-color" content="#0b1030">
+<meta name="theme-color" content="#06231e">
 <meta name="description" content="Experiment 05: IPv6 fragmentation and reassembly virtual laboratory (DCN V-Lab).">
 <script>
   (function () {
+    var d = document.documentElement;
     try {
-      var savedTheme = localStorage.getItem('dcn-vlab-theme');
-      document.documentElement.setAttribute('data-theme', savedTheme === 'dark' ? 'dark' : 'light');
-    } catch (error) {
-      document.documentElement.setAttribute('data-theme', 'light');
+      var s = JSON.parse(localStorage.getItem('dcn-vlab-ipv6-settings-v1') || '{}');
+      var t = s.theme || localStorage.getItem('dcn-vlab-theme') || 'light';
+      if (t === 'system') t = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      d.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
+      d.setAttribute('data-accent', s.accent || 'green');
+      d.setAttribute('data-text', s.text || 'medium');
+      d.setAttribute('data-contrast', s.contrast || 'normal');
+      var m = s.motion || 'system';
+      d.setAttribute('data-motion', m === 'on' || (m === 'system' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) ? 'reduce' : 'full');
+      d.setAttribute('data-sidebar', s.sidebar || 'expanded');
+    } catch (e) {
+      d.setAttribute('data-theme', 'light'); d.setAttribute('data-accent', 'green'); d.setAttribute('data-sidebar', 'expanded');
     }
   }());
 </script>
 <link rel="stylesheet" href="css/lab.css">
 <link rel="stylesheet" href="css/v6.css">
+<link rel="stylesheet" href="css/theme.css">
+<link rel="stylesheet" href="css/ui.css">
 </head>
 <body data-page="setup">
 <a class="skip-link" href="#main">Skip to content</a>
@@ -26,6 +37,8 @@
 <div class="app" id="app">
 
   <nav class="sidebar" id="sidebar" aria-label="Lab sections">
+    <button class="sb-close" id="sb-close" type="button" aria-label="Close menu">×</button>
+    <button class="sb-collapse" id="sb-collapse" type="button" aria-label="Collapse sidebar to icons" aria-expanded="true" title="Collapse sidebar"><span aria-hidden="true">‹</span></button>
     <a class="brand" href="index.html" aria-label="IPv6 experiment overview">
       <span class="brand-mark" aria-hidden="true"><span></span></span>
       <span class="brand-text"><strong>DCN <b>V-LAB</b></strong><small>Engineering learning environment</small></span>
@@ -35,24 +48,26 @@
       <strong>Data Communication<br>&amp; Networking</strong>
       <span class="sidebar-course-meta">Network layer <i></i> Experiment 05 · IPv6</span>
     </div>
-    <ul class="nav-list">
-      <li class="nav-label">Learn</li>
-      <li><a class="nav-btn" data-index="01" href="index.html">Overview</a></li>
-      <li><a class="nav-btn" data-index="02" href="theory.html">Theory and concepts</a></li>
-      <li class="nav-label">Experiment workspace</li>
-      <li><a class="nav-btn active" data-index="03" href="setup.html" aria-current="page">Packet configuration</a></li>
-      <li><a class="nav-btn" data-index="04" href="simulation.html">Live simulation</a></li>
-      <li><a class="nav-btn" data-index="05" href="headers.html">Packet header inspector</a></li>
-      <li><a class="nav-btn" data-index="06" href="reassembly.html">Reassembly lab</a></li>
-      <li><a class="nav-btn" data-index="07" href="results.html">Results and analysis</a></li>
-      <li class="nav-label">Assessment</li>
-      <li><a class="nav-btn" data-index="08" href="quiz.html">Knowledge check</a></li>
-      <li class="nav-label">Other experiment</li>
-      <li><a class="nav-btn nav-btn-ext" data-index="E4" href="../index.html">IPv4 fragmentation lab <span class="nav-external-mark" aria-hidden="true">↗</span></a></li>
+    <ul class="nav-list" id="nav-list">
+      <li class="nav-label nav-group-head" data-group="learn"><button type="button" class="nav-toggle" aria-expanded="true">Learn<span class="chev" aria-hidden="true"></span></button></li>
+      <li data-group="learn"><a class="nav-btn" data-index="01" href="index.html" title="Overview">Overview</a></li>
+      <li data-group="learn"><a class="nav-btn" data-index="02" href="theory.html" title="Theory and concepts">Theory and concepts</a></li>
+      <li class="nav-label nav-group-head" data-group="lab"><button type="button" class="nav-toggle" aria-expanded="true">Experiment workspace<span class="chev" aria-hidden="true"></span></button></li>
+      <li data-group="lab"><a class="nav-btn active" data-index="03" href="setup.html" title="Packet configuration" aria-current="page">Packet configuration</a></li>
+      <li data-group="lab"><a class="nav-btn" data-index="04" href="simulation.html" title="Live simulation">Live simulation</a></li>
+      <li data-group="lab"><a class="nav-btn" data-index="05" href="headers.html" title="Packet header inspector">Packet header inspector</a></li>
+      <li data-group="lab"><a class="nav-btn" data-index="06" href="reassembly.html" title="Reassembly lab">Reassembly lab</a></li>
+      <li data-group="lab"><a class="nav-btn" data-index="07" href="results.html" title="Results and analysis">Results and analysis</a></li>
+      <li class="nav-label nav-group-head" data-group="assess"><button type="button" class="nav-toggle" aria-expanded="true">Assessment<span class="chev" aria-hidden="true"></span></button></li>
+      <li data-group="assess"><a class="nav-btn" data-index="08" href="quiz.html" title="Knowledge check">Knowledge check</a></li>
+      <li class="nav-label nav-group-head" data-group="prefs"><button type="button" class="nav-toggle" aria-expanded="true">Preferences<span class="chev" aria-hidden="true"></span></button></li>
+      <li data-group="prefs"><a class="nav-btn" data-index="09" href="settings.html" title="Settings">Settings</a></li>
+      <li class="nav-label nav-group-head" data-group="other"><button type="button" class="nav-toggle" aria-expanded="true">Other experiment<span class="chev" aria-hidden="true"></span></button></li>
+      <li data-group="other"><a class="nav-btn nav-btn-ext" data-index="E4" href="../index.html" title="IPv4 fragmentation lab">IPv4 fragmentation lab <span class="nav-external-mark" aria-hidden="true">↗</span></a></li>
     </ul>
     <div class="sidebar-foot">
       <span class="sidebar-foot-mark" aria-hidden="true">✓</span>
-      <div><strong>Ready for self-study</strong><small>Runs in a modern browser</small></div>
+      <div><strong id="sb-progress-title">Ready for self-study</strong><small id="sb-progress-sub">Runs in a modern browser</small></div>
     </div>
   </nav>
 
@@ -61,6 +76,7 @@
   <main class="content" id="main" tabindex="-1">
     <header class="portal-header" aria-label="Virtual laboratory header">
       <div class="portal-breadcrumb">
+        <button class="sb-toggle" id="sb-toggle" type="button" aria-controls="sidebar" aria-expanded="true" aria-label="Hide sidebar" title="Hide or show the sidebar (B)"><span class="sb-toggle-bars" aria-hidden="true"></span></button>
         <span class="portal-brand-tag">V-LAB</span>
         <span class="breadcrumb-course">Data Communication &amp; Networking</span>
         <span class="breadcrumb-separator" aria-hidden="true">/</span>
@@ -73,6 +89,7 @@
           <span class="theme-toggle-label">Dark mode</span>
           <span class="theme-toggle-track" aria-hidden="true"><span></span></span>
         </button>
+        <a class="icon-btn" href="settings.html" aria-label="Settings" title="Settings"><span aria-hidden="true">⚙</span></a>
         <div class="portal-status"><span class="portal-status-dot" aria-hidden="true"></span><span>Interactive module</span><i></i><span>Experiment 05</span></div>
       </div>
       <div class="reading-progress" id="reading-progress" aria-hidden="true"><span id="reading-progress-fill"></span></div>
@@ -86,10 +103,12 @@
           <div class="field">
             <label for="in-size">Original IPv6 packet size: <output id="in-size-val">4000</output> bytes</label>
             <div class="range-row"><input type="range" id="in-size" min="40" max="9000" step="1" value="4000"><input type="number" id="in-size-num" min="40" max="9000" step="1" value="4000" aria-label="Packet size in bytes"></div>
+            <div class="presets" data-preset-for="size" aria-label="Packet size presets"><button type="button" class="chip" data-v="1200">1200</button><button type="button" class="chip" data-v="4000">4000</button><button type="button" class="chip" data-v="6000">6000</button><button type="button" class="chip" data-v="9000">9000</button></div>
           </div>
           <div class="field">
             <label for="in-mtu">Path MTU (Link B): <output id="in-mtu-val">1500</output> bytes</label>
             <div class="range-row"><input type="range" id="in-mtu" min="1280" max="9000" step="1" value="1500"><input type="number" id="in-mtu-num" min="1280" max="9000" step="1" value="1500" aria-label="Path MTU in bytes"></div>
+            <div class="presets" data-preset-for="mtu" aria-label="Path MTU presets"><button type="button" class="chip" data-v="1280" title="IPv6 minimum link MTU">1280 min</button><button type="button" class="chip" data-v="1492" title="PPPoE">1492 PPPoE</button><button type="button" class="chip" data-v="1500" title="Ethernet">1500 Ethernet</button><button type="button" class="chip" data-v="9000" title="Jumbo frames">9000 jumbo</button></div>
             <p class="hint" style="margin:.5rem 0 0">IPv6 requires every link to support at least 1280 bytes.</p>
           </div>
           <fieldset class="field">
@@ -126,10 +145,11 @@
 
     <footer class="portal-footer">
       <div><span class="footer-mark" aria-hidden="true">V</span><div><strong>DCN Virtual Laboratory</strong><small>Experiment 05 · IPv6 Fragmentation &amp; Reassembly</small></div></div>
-      <span class="footer-note"><a href="../index.html">Experiment 04 · IPv4</a> · Runs locally in your browser</span>
+      <span class="footer-note"><a href="settings.html">Settings</a> · <a href="../index.html">Experiment 04 · IPv4</a> · Runs locally in your browser</span>
     </footer>
   </main>
 </div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 <script src="js/model.js"></script>
 <script src="js/shell.js"></script>
 <script src="js/voice.js"></script>

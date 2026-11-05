@@ -10,6 +10,7 @@
   function proto(c) { return M.protocolName(c.nextHeader) + ' (' + c.nextHeader + ')'; }
   function run() { var c = V6.config.read(); return { c: c, id: V6.getId() }; }
   function calcFor(c, id) { return M.calculate(c.packetSize, c.mtu, id); }
+  function overhead(r, c) { return r.fragments.reduce(function (t, f) { return t + f.total; }, 0) - c.packetSize; }
   function maxTotal(r) { return r.fragments.reduce(function (m, f) { return Math.max(m, f.total); }, 0); }
   function range(f) { return f.offsetBytes + '–' + f.endByte; }
 
@@ -50,13 +51,14 @@
       var rows = [['Fragmentable part F = P − 40', r.fragmentable + ' B'],
         ['Dmax = floor((MTU − 48) / 8) × 8', r.maxData + ' B'],
         ['Fragments created', r.noFragmentation ? '0' : String(r.fragments.length)]];
-      if (!r.noFragmentation) rows.push(['Last fragment data', r.fragments[r.fragments.length - 1].data + ' B'], ['Largest fragment on the wire', maxTotal(r) + ' B (limit ' + x.mtu + ' B)']);
+      if (!r.noFragmentation) rows.push(['Last fragment data', r.fragments[r.fragments.length - 1].data + ' B'], ['Largest fragment on the wire', maxTotal(r) + ' B (limit ' + x.mtu + ' B)'], ['Header overhead added', '+' + overhead(r, x) + ' B (' + r.fragments.length + ' × 48 B − 40 B)']);
       rows.forEach(function (p) { var d = mk('div', 'prev-row'); d.appendChild(mk('span', '', p[0])); d.appendChild(mk('span', '', p[1])); prev.appendChild(d); });
       var v = mk('div', 'prev-verdict ' + (r.noFragmentation ? 'ok' : ''), r.noFragmentation
         ? 'Fits the Path MTU. The router forwards the packet unchanged.'
         : 'Too big for Link B. The router drops it and sends Packet Too Big; the source then creates ' + r.fragments.length + ' fragments.');
       prev.appendChild(v);
       document.querySelectorAll('#scenario-buttons [data-scenario]').forEach(function (b) { b.classList.toggle('selected', Number(b.dataset.scenario) === x.scenario); });
+      document.querySelectorAll('.presets').forEach(function (p) { var cur = p.dataset.presetFor === 'size' ? x.packetSize : x.mtu; p.querySelectorAll('.chip').forEach(function (b) { b.classList.toggle('is-on', Number(b.dataset.v) === cur); }); });
       return x;
     }
     function fromNumber(input, slider, min, max, label) {
@@ -77,6 +79,12 @@
         setFromConfig(V6.config.read()); errors.textContent = ''; draw(true); $('scenario-desc').textContent = s.text;
       });
     });
+    document.querySelectorAll('.presets .chip').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var forSize = b.parentNode.dataset.presetFor === 'size', slider = forSize ? size : mtu, num = forSize ? sizeNum : mtuNum;
+        slider.value = b.dataset.v; num.value = b.dataset.v; V6.paintRange(slider); errors.textContent = ''; draw(false);
+      });
+    });
     $('btn-simulate').addEventListener('click', function () { draw(true); window.location.href = 'simulation.html'; });
     setFromConfig(c); draw(true);
     if (c.scenario && SCENARIOS[c.scenario]) $('scenario-desc').textContent = SCENARIOS[c.scenario].text;
@@ -92,6 +100,7 @@
     function chips() {
       var box = $('sim-summary'); box.textContent = '';
       var items = [['Packet', c.packetSize + ' B'], ['Path MTU', c.mtu + ' B'], ['Fragments', r.error ? '—' : String(fragmented ? r.fragments.length : 0)], ['Protocol', proto(c)], ['Identification', V6.fmtId(id)]];
+      if (fragmented) items.splice(3, 0, ['Overhead', '+' + overhead(r, c) + ' B']);
       items.forEach(function (p) { var s = mk('span', 'sim-chip'); s.appendChild(mk('span', '', p[0])); s.appendChild(mk('b', '', p[1])); box.appendChild(s); });
       var o = mk('span', 'sim-chip ' + (fragmented ? 'is-warn' : 'is-ok')); o.appendChild(mk('b', '', fragmented ? 'Router drops, source fragments' : 'Fits: forwarded whole')); box.appendChild(o);
     }
@@ -135,7 +144,7 @@
     /* stepper + tray */
     function buildStepper(list) {
       var ol = $('sim-stepper'); ol.textContent = '';
-      list.forEach(function (s, i) { var li = mk('li', 'step'); li.dataset.stage = s.name; li.appendChild(mk('span', 'step-dot', String(i + 1))); li.appendChild(mk('span', 'step-name', s.label)); ol.appendChild(li); });
+      list.forEach(function (s, i) { var li = mk('li', 'step'); li.dataset.stage = s.name; li.tabIndex = 0; li.setAttribute('role', 'button'); li.setAttribute('aria-label', 'Jump to stage ' + (i + 1) + ': ' + s.label); li.addEventListener('click', function () { A.goTo(i); }); li.addEventListener('keydown', function (ev) { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); A.goTo(i); } }); li.appendChild(mk('span', 'step-dot', String(i + 1))); li.appendChild(mk('span', 'step-name', s.label)); ol.appendChild(li); });
     }
     function markSteps(index, done) {
       Array.prototype.forEach.call($('sim-stepper').children, function (li, i) {
@@ -148,7 +157,7 @@
       r.fragments.forEach(function (f, i) {
         var li = mk('li', 'tray-item ' + fcl(i)); li.dataset.state = 'pending'; li.dataset.index = i;
         li.appendChild(mk('b', '', 'F' + f.number)); li.appendChild(mk('span', 'tray-meta', f.data + ' B'));
-        li.appendChild(mk('span', 'tray-meta tray-off', 'offset ' + f.offset + ' · M ' + f.more)); li.appendChild(mk('em', 'tray-state', 'Pending'));
+        li.appendChild(mk('span', 'tray-meta tray-off', 'offset ' + f.offset + ' · M ' + f.more)); li.appendChild(mk('em', 'tray-state', 'Pending')); var lk = mk('a', 'tray-open', 'Inspect header →'); lk.href = 'headers.html#f' + f.number; li.appendChild(lk);
         trayList.appendChild(li);
       });
     }
@@ -163,8 +172,8 @@
     var CHIP = { idle: ['Ready', ''], running: ['Running', 'run'], paused: ['Paused', 'pause'], stepping: ['Step mode', 'step'], finished: ['Complete', 'done'] };
     var chipEl = $('sim-stage');
     function refreshButtons(st) {
-      var map = { idle: [1, 0, 0, 1, 1], running: [1, 1, 0, 1, 1], paused: [1, 0, 1, 1, 1], stepping: [1, 0, 1, 1, 1], finished: [1, 0, 0, 1, 1] }[st];
-      ['start', 'pause', 'resume', 'step', 'reset'].forEach(function (n, i) { $('btn-sim-' + n).disabled = !map[i]; });
+      var map = { idle: [1, 0, 0, 1, 1, 0], running: [1, 1, 0, 1, 1, 1], paused: [1, 0, 1, 1, 1, 1], stepping: [1, 0, 1, 1, 1, 1], finished: [1, 0, 0, 1, 1, 1] }[st];
+      ['start', 'pause', 'resume', 'step', 'reset', 'back'].forEach(function (n, i) { $('btn-sim-' + n).disabled = !map[i]; });
       section.dataset.simState = st;
     }
     function stageChip(index, count) {
@@ -186,7 +195,7 @@
           stageChip(0, stageList.length);
         } else if (e.type === 'stageStart') {
           lastInfo = e.stage; markSteps(e.stage.index, false); stageChip(e.stage.index, e.stage.count);
-          var txt = narrate(e.stage.name); $('sim-status').textContent = txt; $('topology-caption').textContent = txt; if (window.V6Voice && window.V6Voice.isEnabled()) window.V6Voice.speak(txt);
+          var txt = narrate(e.stage.name); $('sim-status').textContent = txt; $('topology-caption').textContent = txt; if (!e.replay && window.V6Voice && window.V6Voice.isEnabled()) window.V6Voice.speak(txt);
           if (e.stage.name === 'fragment') { tray.hidden = false; }
           if (LOGTEXT[e.stage.name]) logLine(LOGTEXT[e.stage.name], LOGTYPE[e.stage.name] || '');
           onStageWork(e.stage.name);
@@ -210,21 +219,23 @@
     $('btn-sim-pause').addEventListener('click', press(function () { A.pause(); }));
     $('btn-sim-resume').addEventListener('click', press(function () { A.resume(); }));
     $('btn-sim-step').addEventListener('click', press(function () { A.step(); }));
+    $('btn-sim-back').addEventListener('click', press(function () { A.back(); }));
     $('btn-sim-reset').addEventListener('click', press(function () { id = V6.newId(); r = calcFor(c, id); loadAnim(); chips(); }));
 
     var speedEl = $('sim-speed');
     function setSpeed(v) {
       v = Math.max(0.25, Math.min(3, Number(v) || 1)); speedEl.value = v; V6.paintRange(speedEl); $('sim-speed-val').textContent = v + '×'; A.setSpeed(v);
       document.querySelectorAll('.speed-presets [data-speed]').forEach(function (b) { b.classList.toggle('is-active', Number(b.dataset.speed) === v); });
-      var cur = V6.config.read(); cur.speed = v; V6.config.save(cur);
+      if (V6.settings.get().speed !== v) V6.settings.set({ speed: v });
     }
     speedEl.addEventListener('input', function () { setSpeed(speedEl.value); });
     document.querySelectorAll('.speed-presets [data-speed]').forEach(function (b) { b.addEventListener('click', function () { setSpeed(b.dataset.speed); }); });
 
     document.addEventListener('keydown', function (e) {
-      if (e.ctrlKey || e.metaKey || e.altKey || /^(INPUT|SELECT|TEXTAREA|BUTTON|A)$/.test(e.target.tagName)) return;
+      if (!V6.settings.get().shortcuts || e.ctrlKey || e.metaKey || e.altKey || /^(INPUT|SELECT|TEXTAREA|BUTTON|A)$/.test(e.target.tagName)) return;
       if (e.code === 'Space') { e.preventDefault(); var st = A.getState(); if (st === 'running') A.pause(); else if (st === 'paused' || st === 'stepping') A.resume(); else A.start(); }
       else if (e.key === 'ArrowRight') { e.preventDefault(); A.step(); }
+      else if (e.key === 'ArrowLeft') { e.preventDefault(); A.back(); }
       else if (e.key.toLowerCase() === 'r') { $('btn-sim-reset').click(); }
     });
 
@@ -235,7 +246,10 @@
       A.load(c, r); setSpeed(c.speed);
       buildTray(); markSteps(-1, false);
     }
+    var st0 = V6.settings.get();
+    $('card-workings').hidden = !st0.showWorkings; $('card-log').hidden = !st0.showLog; $('sim-panels').hidden = !st0.showWorkings && !st0.showLog;
     chips(); loadAnim();
+    if (st0.autoStart && !r.error) setTimeout(function () { A.start(); }, 350);
   }
 
   /* ═══════════════ Header inspector ═══════════════ */
@@ -246,19 +260,20 @@
   function initHeaders() {
     var list = $('inspector-list'); if (!list) return;
     var ru = run(), c = ru.c, id = ru.id, r = calcFor(c, id), observe = 'source', selected = 0, field = null;
+    var hm = /^#f(\d+)$/.exec(location.hash || ''); if (hm) selected = Math.max(0, Number(hm[1]) - 1);
     var fragmented = !r.error && !r.noFragmentation;
     var packets = fragmented ? r.fragments : [{ number: 1, data: c.packetSize - 40, total: c.packetSize, payloadLength: c.packetSize - 40, offsetBytes: 0, offset: 0, more: 0, whole: true }];
     var pn = M.protocolName(c.nextHeader);
 
     function fieldsFor(f) {
-      var hop = observe === 'link-b' ? 63 : 64, idTxt = V6.fmtId(id);
+      var H0 = V6.settings.get().hopLimit, hop = observe === 'link-b' ? H0 - 1 : H0, idTxt = V6.fmtId(id);
       var F = {
         version: { name: 'Version', val: '6', text: 'Always 6 for IPv6 (it is 4 in IPv4).', eq: 'Version = 0110 (binary) = 6' },
         tc: { name: 'Traffic Class', val: '0x00', text: 'Priority and congestion marking (DSCP and ECN). The lab sends 0.', eq: 'Traffic Class = 0x00' },
         flow: { name: 'Flow Label', val: '0x00000', text: 'Lets routers treat packets of one flow alike. The lab sends 0.', eq: 'Flow Label = 0' },
         plen: { name: 'Payload Length', val: String(f.payloadLength), text: fragmented ? 'Bytes after the 40-byte base header. In a fragment this is the 8-byte Fragment Header plus the fragment data.' : 'Bytes after the 40-byte base header. This packet is not fragmented.', eq: fragmented ? 'Payload Length = 8 + ' + f.data + ' = ' + f.payloadLength + ' B' : 'Payload Length = ' + c.packetSize + ' − 40 = ' + f.payloadLength + ' B' },
         nh: { name: 'Next Header', val: fragmented ? '44' : String(c.nextHeader), text: fragmented ? '44 means a Fragment Header follows the base header. The transport protocol is named inside the Fragment Header.' : 'No Fragment Header: the base header names the transport protocol directly (' + pn + ').', eq: fragmented ? 'Next Header = 44 → Fragment Header' : 'Next Header = ' + c.nextHeader + ' → ' + pn },
-        hop: { name: 'Hop Limit', val: String(hop), text: 'The source sets 64. The router decrements it by 1 when it forwards, so the packet is seen as 63 on Link B. At 0 a router discards the packet.', eq: 'Hop Limit: source 64 → after router ' + (64 - 1) + (observe === 'link-b' ? '   (showing Link B)' : '   (showing source)') },
+        hop: { name: 'Hop Limit', val: String(hop), text: 'The source sets ' + H0 + '. The router decrements it by 1 when it forwards, so the packet is seen as ' + (H0 - 1) + ' on Link B. At 0 a router discards the packet.', eq: 'Hop Limit: source ' + H0 + ' → after router ' + (H0 - 1) + (observe === 'link-b' ? '   (showing Link B)' : '   (showing source)') },
         src: { name: 'Source Address', val: '2001:db8:1::10', text: 'The 128-bit address of the sender, shown in four 32-bit rows. The same in every fragment.', eq: 'Source = 2001:0db8:0001:0000:0000:0000:0000:0010' },
         dst: { name: 'Destination Address', val: '2001:db8:2::20', text: 'The 128-bit address of the receiver. The destination uses source, destination and Identification to group fragments.', eq: 'Destination = 2001:0db8:0002:0000:0000:0000:0000:0020' }
       };
@@ -273,6 +288,18 @@
       return F;
     }
 
+    var BYTES = { version: [0, 3], tc: [0, 3], flow: [0, 3], plen: [4, 5], nh: [6, 6], hop: [7, 7], src: [8, 23], dst: [24, 39], fnh: [40, 40], fres: [41, 41], foff: [42, 43], fres2: [43, 43], fm: [43, 43], fid: [44, 47] };
+    function renderHex(f) {
+      var box = $('hex-view'); if (!box) return; box.textContent = '';
+      var H0 = V6.settings.get().hopLimit, hop = observe === 'link-b' ? H0 - 1 : H0, b = [0x60, 0, 0, 0, (f.payloadLength >> 8) & 255, f.payloadLength & 255, fragmented ? 44 : c.nextHeader, hop];
+      SRC.concat(DST).forEach(function (h) { b.push((h >> 8) & 255, h & 255); });
+      if (fragmented) { var of = (f.offset << 3) | f.more; b.push(c.nextHeader, 0, (of >> 8) & 255, of & 255, (id >>> 24) & 255, (id >>> 16) & 255, (id >>> 8) & 255, id & 255); }
+      var rng = field && BYTES[field] && (fragmented || BYTES[field][0] < 40) ? BYTES[field] : null;
+      b.forEach(function (v, i) {
+        var n = mk('div', 'hex-byte ' + (i >= 40 ? 'frag' : (i < 8 ? 'grp-a' : 'grp-b')) + (rng && i >= rng[0] && i <= rng[1] ? ' sel' : ''));
+        n.appendChild(document.createTextNode(v.toString(16).toUpperCase().padStart(2, '0'))); n.appendChild(mk('small', '', String(i))); box.appendChild(n);
+      });
+    }
     function hf(key, span, extra) { return { key: key, span: span, cls: extra || '' }; }
     function render() {
       var f = packets[selected], F = fieldsFor(f), diag = $('header-diagram'); diag.textContent = '';
@@ -310,6 +337,7 @@
       var chipsBox = $('insp-chips'); chipsBox.textContent = '';
       [['Total length', f.total + ' B'], ['Payload Length', f.payloadLength + ' B'], ['Data', f.data + ' B']].forEach(function (p) { var s = mk('span', 'sim-chip'); s.appendChild(mk('span', '', p[0])); s.appendChild(mk('b', '', p[1])); chipsBox.appendChild(s); });
 
+      renderHex(f);
       var ex = $('field-explain'); ex.textContent = '';
       if (field && F[field]) { ex.appendChild(mk('h2', '', F[field].name)); ex.appendChild(mk('p', '', F[field].text)); ex.appendChild(mk('p', 'eq', F[field].eq)); }
       else ex.appendChild(mk('p', 'hint', 'Select a field in the header to read what it does.'));
@@ -328,6 +356,7 @@
       b.addEventListener('click', function () { observe = b.dataset.observe; document.querySelectorAll('#observe-toggle [data-observe]').forEach(function (x) { x.classList.toggle('is-active', x === b); }); render(); });
     });
     if (r.error) { $('header-diagram').textContent = r.error; return; }
+    if (selected >= packets.length) selected = 0;
     markList(); render();
   }
 
@@ -341,8 +370,9 @@
       document.querySelectorAll('.sim-bar .btn, .sim-bar select').forEach(function (b) { b.disabled = true; });
       return;
     }
-    var eng = M.createReassembly(r), n = r.fragments.length, lost = {}, queue = [], pos = 0, lastDelivered = null;
+    var eng = M.createReassembly(r, { timeout: V6.settings.get().timeout }), n = r.fragments.length, lost = {}, queue = [], pos = 0, lastDelivered = null;
     var orderSel = $('re-order'), logLines = [];
+    $('re-note').textContent = 'An incomplete packet is discarded when the reassembly timer expires (' + eng.timeout + ' s' + (eng.timeout === 60 ? ', RFC 8200' : ', changed in Settings') + '). If the first fragment had arrived, the destination sends ICMPv6 Time Exceeded (Type 3, Code 1).';
     if (c.scenario === 5) lost[Math.ceil(n / 2)] = true;
     if (c.scenario === 6) orderSel.value = 'shuffle';
 
@@ -373,7 +403,7 @@
       if (s.status === 'waiting') el.textContent = 'Waiting for fragments.';
       else if (s.status === 'partial') { el.classList.add('is-partial'); el.textContent = 'Incomplete: waiting for the missing byte ranges.'; }
       else if (s.status === 'complete') { el.classList.add('is-complete'); el.textContent = 'Complete: the ' + c.packetSize + '-byte packet is reassembled.'; }
-      else { el.classList.add('is-timeout'); el.textContent = 'Discarded: reassembly timeout (' + M.REASSEMBLY_TIMEOUT_S + ' s).'; }
+      else { el.classList.add('is-timeout'); el.textContent = 'Discarded: reassembly timeout (' + eng.timeout + ' s).'; }
     }
     function render() {
       var s = eng.state, F = r.fragmentable;
@@ -418,10 +448,10 @@
       }
       // timer
       var tm = $('re-timer'); tm.textContent = '';
-      if (s.status === 'waiting') tm.textContent = 'The ' + M.REASSEMBLY_TIMEOUT_S + '-second reassembly timer starts when the first fragment arrives.';
+      if (s.status === 'waiting') tm.textContent = 'The ' + eng.timeout + '-second reassembly timer starts when the first fragment arrives.';
       else {
-        tm.appendChild(document.createTextNode('Reassembly timer: ' + s.clock + ' s of ' + M.REASSEMBLY_TIMEOUT_S + ' s' + (s.status === 'complete' ? ' (stopped: complete)' : '')));
-        var tr = mk('div', 'timer-track'); var sp = mk('span'); sp.style.width = (s.clock / M.REASSEMBLY_TIMEOUT_S * 100) + '%'; tr.appendChild(sp); tm.appendChild(tr);
+        tm.appendChild(document.createTextNode('Reassembly timer: ' + s.clock + ' s of ' + eng.timeout + ' s' + (s.status === 'complete' ? ' (stopped: complete)' : '')));
+        var tr = mk('div', 'timer-track'); var sp = mk('span'); sp.style.width = (s.clock / eng.timeout * 100) + '%'; tr.appendChild(sp); tm.appendChild(tr);
         if (s.icmp) tm.appendChild(mk('div', '', s.icmp.text));
       }
       var nothing = nextPending() === null;
@@ -439,7 +469,7 @@
       r.fragments.forEach(function (f) { if (info[f.number + 'lost'] && eng.state.received.indexOf(f.number) === -1) { lost[f.number] = false; delete info[f.number + 'lost']; info[f.number + 'lostDone'] = true; var res = eng.receive(f.number); if (res.kind === 'new') info[f.number + 'delivered'] = true; lastDelivered = f.number; } });
       render();
     });
-    $('btn-re-timeout').addEventListener('click', function () { eng.advance(M.REASSEMBLY_TIMEOUT_S); render(); });
+    $('btn-re-timeout').addEventListener('click', function () { eng.advance(eng.timeout); render(); });
     function reset() { eng.reset(); info = {}; lastDelivered = null; queue = makeQueue(); pos = 0; render(); }
     $('btn-re-reset').addEventListener('click', reset);
     orderSel.addEventListener('change', reset);
@@ -453,7 +483,7 @@
     if (r.error) { body.textContent = r.error; return; }
     var fragmented = !r.noFragmentation, frs = r.fragments;
     var sum = $('results-summary'); sum.textContent = '';
-    [['Packet size', c.packetSize + ' B'], ['Path MTU', c.mtu + ' B'], ['Fragmentable part', r.fragmentable + ' B'], ['Dmax', r.maxData + ' B'], ['Fragments', fragmented ? String(frs.length) : '0'], ['Identification', fragmented ? V6.fmtId(id) : 'not used']].forEach(function (p) { var d = mk('div'); d.appendChild(mk('dt', '', p[0])); d.appendChild(mk('dd', '', p[1])); sum.appendChild(d); });
+    [['Packet size', c.packetSize + ' B'], ['Path MTU', c.mtu + ' B'], ['Fragmentable part', r.fragmentable + ' B'], ['Dmax', r.maxData + ' B'], ['Fragments', fragmented ? String(frs.length) : '0'], ['Bytes sent on Link B', fragmented ? (c.packetSize + overhead(r, c)) + ' B' : c.packetSize + ' B'], ['Header overhead', fragmented ? '+' + overhead(r, c) + ' B' : 'none'], ['Identification', fragmented ? V6.fmtId(id) : 'not used']].forEach(function (p) { var d = mk('div'); d.appendChild(mk('dt', '', p[0])); d.appendChild(mk('dd', '', p[1])); sum.appendChild(d); });
     $('results-caption').textContent = fragmented ? 'Packets sent by the source' : 'Packet sent by the source (not fragmented)';
     var tb = document.querySelector('#results-table tbody'); tb.textContent = '';
     if (fragmented) frs.forEach(function (f, i) {
@@ -495,6 +525,15 @@
       frs.slice(0, 12).forEach(function (f) { wl('F' + f.number + ': data ' + f.data + ' B, offset ' + f.offsetBytes + ' ÷ 8 = ' + f.offset + ', payload 8 + ' + f.data + ' = ' + f.payloadLength + ' B, total 40 + ' + f.payloadLength + ' = ' + f.total + ' B, M = ' + f.more); });
       if (frs.length > 12) wl('… and ' + (frs.length - 12) + ' more fragments (see the table)');
     }
+    $('btn-print').addEventListener('click', function () { window.print(); });
+    $('btn-csv').addEventListener('click', function () {
+      var rows = [['fragment', 'data_bytes', 'fragment_header_bytes', 'payload_length', 'total_length', 'byte_start', 'byte_end', 'offset_units', 'm_flag']];
+      if (fragmented) frs.forEach(function (f) { rows.push(['F' + f.number, f.data, 8, f.payloadLength, f.total, f.offsetBytes, f.endByte, f.offset, f.more]); });
+      else rows.push(['original', c.packetSize - 40, 0, c.packetSize - 40, c.packetSize, 0, c.packetSize - 41, 0, 0]);
+      var blob = new Blob([rows.map(function (x) { return x.join(','); }).join('\n') + '\n'], { type: 'text/csv' }), a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = 'ipv6-fragments-' + c.packetSize + 'B-mtu' + c.mtu + '.csv'; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 500); V6.toast('CSV downloaded');
+    });
     var v4 = M.ipv4Comparison(c.packetSize, c.mtu), cmp = $('results-compare');
     cmp.textContent = fragmented
       ? 'With IPv4 (20-byte header, DF = 0) the router would make ' + v4.count + ' fragments (Pmax = ' + v4.pmax + ' B). IPv6 makes ' + frs.length + (frs.length > v4.count ? ': each fragment also pays for the 8-byte Fragment Header, so it carries less data' : ': the same count') + ', and it is the source, not the router, that does the work.'
@@ -567,10 +606,69 @@
     }
     $('quiz-next').addEventListener('click', function () {
       if (idx < set.length - 1) { idx++; show(); }
-      else { $('quiz-run').hidden = true; $('quiz-done').hidden = false; $('quiz-bar').value = set.length; $('quiz-score').textContent = score + ' / ' + set.length; $('quiz-summary').textContent = score === set.length ? 'Perfect score.' : 'Review the theory page for the questions you missed, then try again: the numbers change each time.'; }
+      else { $('quiz-run').hidden = true; $('quiz-done').hidden = false; $('quiz-bar').value = set.length; V6.progress.saveQuiz(score, set.length); $('quiz-score').textContent = score + ' / ' + set.length; $('quiz-summary').textContent = score === set.length ? 'Perfect score.' : 'Review the theory page for the questions you missed, then try again: the numbers change each time.'; }
     });
     $('quiz-retry').addEventListener('click', start);
     start();
+  }
+
+  /* ═══════════════ Overview progress ═══════════════ */
+  function initOverview() {
+    var card = $('progress-card'); if (!card) return;
+    var p = V6.progress.read(), pages = V6.progress.pages, names = V6.progress.names;
+    var done = pages.filter(function (k) { return p.visited[k]; }), left = pages.filter(function (k) { return !p.visited[k]; });
+    $('lab-progress').value = done.length;
+    $('progress-title').textContent = done.length === 0 ? 'Start the experiment' : (done.length === pages.length ? 'Experiment complete' : done.length + ' of ' + pages.length + ' pages visited');
+    var go = $('progress-resume'), target = left.length ? left[0] : 'setup';
+    go.href = target + '.html'; go.textContent = done.length === 0 ? 'Start experiment →' : (left.length ? 'Continue: ' + names[target] + ' →' : 'Run it again →');
+    var ul = $('progress-list'); ul.textContent = '';
+    pages.forEach(function (k) { var li = mk('li', p.visited[k] ? 'done' : ''); var a = mk('a', '', names[k]); a.href = k + '.html'; li.appendChild(a); ul.appendChild(li); });
+    if (p.quizBest) ul.appendChild(mk('li', 'done', 'Best quiz score ' + p.quizBest.score + '/' + p.quizBest.total));
+  }
+
+  /* ═══════════════ Settings page ═══════════════ */
+  function initSettings() {
+    var page = $('sec-settings'); if (!page) return;
+    var S = V6.settings;
+    function value(key) { var s = S.get(); return key === 'contrastHigh' ? s.contrast === 'high' : s[key]; }
+    function write(key, v) { if (key === 'contrastHigh') S.set({ contrast: v ? 'high' : 'normal' }); else S.set((function (o) { o[key] = v; return o; }({}))); }
+    function sync() {
+      page.querySelectorAll('[data-setting]').forEach(function (el) {
+        var key = el.dataset.setting, v = value(key);
+        if (el.classList.contains('seg') || el.classList.contains('swatches')) el.querySelectorAll('[role="radio"]').forEach(function (b) { b.setAttribute('aria-checked', String(b.dataset.value) === String(v) ? 'true' : 'false'); });
+        else if (el.type === 'checkbox') el.checked = !!v;
+        else if (el.type === 'range') { el.value = v; V6.paintRange(el); $('out-speed').textContent = v + '×'; }
+        else el.value = v;
+      });
+    }
+    page.querySelectorAll('.seg, .swatches').forEach(function (g) {
+      g.querySelectorAll('[role="radio"]').forEach(function (b) { b.addEventListener('click', function () { write(g.dataset.setting, b.dataset.value); sync(); }); });
+      g.addEventListener('keydown', function (e) {
+        if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+        var items = Array.prototype.slice.call(g.querySelectorAll('[role="radio"]')), i = items.findIndex(function (x) { return x.getAttribute('aria-checked') === 'true'; });
+        i = (i + (e.key === 'ArrowRight' ? 1 : -1) + items.length) % items.length; items[i].click(); items[i].focus(); e.preventDefault();
+      });
+    });
+    page.querySelectorAll('input[data-setting]').forEach(function (el) {
+      el.addEventListener(el.type === 'number' ? 'change' : 'input', function () {
+        var key = el.dataset.setting; if (el.type === 'checkbox') write(key, el.checked); else if (el.type === 'range') write(key, Number(el.value)); else write(key, Number(el.value));
+        sync();
+      });
+    });
+    $('btn-expand-groups').addEventListener('click', function () { V6.expandGroups(); V6.toast('All menu groups opened'); });
+    $('btn-export').addEventListener('click', function () {
+      var blob = new Blob([JSON.stringify(S.get(), null, 2)], { type: 'application/json' }), a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = 'dcn-vlab-ipv6-settings.json'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 500); V6.toast('Settings exported');
+    });
+    $('file-import').addEventListener('change', function (e) {
+      var f = e.target.files[0]; if (!f) return; var rd = new FileReader();
+      rd.onload = function () { try { var o = JSON.parse(rd.result); if (!o || typeof o !== 'object') throw new Error('bad'); S.replace(o); sync(); V6.toast('Settings imported'); } catch (x) { V6.toast('That file is not a settings export'); } };
+      rd.readAsText(f); e.target.value = '';
+    });
+    $('btn-reset-config').addEventListener('click', function () { V6.config.reset(); V6.toast('Experiment values reset to 4000 B / 1500 B'); });
+    $('btn-reset-progress').addEventListener('click', function () { V6.progress.clear(); V6.toast('Progress cleared'); });
+    $('btn-reset-all').addEventListener('click', function () { if (window.confirm('Reset every setting to its default?')) { S.reset(); sync(); V6.toast('All settings reset'); } });
+    sync();
   }
 
   /* ═══════════════ Dispatch ═══════════════ */
@@ -582,5 +680,7 @@
     if (p === 'reassembly') initReassembly();
     if (p === 'results') initResults();
     if (p === 'quiz') initQuiz();
+    if (p === 'index') initOverview();
+    if (p === 'settings') initSettings();
   });
 }());

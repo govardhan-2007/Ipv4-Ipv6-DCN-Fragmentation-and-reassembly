@@ -27,6 +27,9 @@
   function $(id) { return document.getElementById(id); }
   function has(mod, fn) { return VLab[mod] && typeof VLab[mod][fn] === 'function'; }
   function narrate(name, data) { if (has('Voice', 'narrate')) VLab.Voice.narrate(name, data || {}); }
+  /** Settings are optional: the lab runs with defaults if settings.js has not loaded. */
+  function setting(key, fallback) { var s = VLab.Settings && VLab.Settings.get(); return s && s[key] !== undefined ? s[key] : fallback; }
+  function fmtId(n) { return VLab.Settings && VLab.Settings.fmtId ? VLab.Settings.fmtId(n) : String(n); }
   function colorClass(index) { return 'fc-' + (((index - 1) % 8) + 8) % 8; }
 
   /** Create an element. props: className, text, attrs {name: value}. */
@@ -50,7 +53,7 @@
   // ---------------------------------------------------------------------
   // State
   // ---------------------------------------------------------------------
-  var SECTIONS = ['home', 'theory', 'setup', 'simulation', 'inspector', 'reassembly', 'results', 'ipv6', 'quiz', 'resources'];
+  var SECTIONS = ['home', 'theory', 'setup', 'simulation', 'inspector', 'reassembly', 'results', 'ipv6', 'quiz', 'resources', 'settings'];
 
   var state = {
     result: null,       // latest fragmentDatagram() result
@@ -101,6 +104,7 @@
     var ipv6Drawer = $('ipv6-drawer-details');
     if (name === 'ipv6' && ipv6Drawer) ipv6Drawer.open = true;
     closeMenu();
+    if (VLab.Settings && VLab.Settings.visit) VLab.Settings.visit(name);
     window.scrollTo(0, 0);
     try { if (window.location.hash !== '#' + name) window.location.hash = name; } catch (e) { /* ignore */ }
   }
@@ -144,7 +148,8 @@
       datagramSize: Number($('in-size').value),
       mtu: Number($('in-mtu').value),
       headerLength: checkedValue('header-len'),
-      df: checkedValue('df')
+      df: checkedValue('df'),
+      ttl: setting('ttl', 64)
     };
   }
 
@@ -268,7 +273,7 @@
 
     var target = o.target || 'simulation';
     showSection(target);
-    if (target === 'simulation' && has('Animation', 'start')) VLab.Animation.start();
+    if (target === 'simulation' && setting('autoStart', true) && has('Animation', 'start')) VLab.Animation.start();
     return true;
   }
 
@@ -303,7 +308,7 @@
     var tone = result.status === 'fragmented' ? 'is-warn' : (result.status === 'no-fragmentation' ? 'is-ok' : 'is-bad');
     box.textContent = '';
     [['Datagram', p.datagramSize + ' B'], ['MTU', p.mtu + ' B'], ['Header', p.headerLength + ' B'],
-      ['DF', p.df], ['Identification', result.identification], ['Outcome', outcome, tone]
+      ['DF', p.df], ['Identification', fmtId(result.identification)], ['Outcome', outcome, tone]
     ].forEach(function (c) {
       box.appendChild(el('div', { className: 'sim-chip' + (c[2] ? ' ' + c[2] : '') }, [el('span', { text: c[0] }), el('b', { text: String(c[1]) })]));
     });
@@ -388,7 +393,7 @@
     });
     if (index === null || !state.result) return;
     var pk = state.result.fragments.filter(function (f) { return f.index === index; })[0];
-    if (pk) hint.textContent = 'Fragment ' + pk.index + ' header: Identification ' + state.result.identification + ', offset ' + pk.fragmentOffset + ', MF ' + pk.mf + ', total length ' + pk.totalLength + ' B.';
+    if (pk) hint.textContent = 'Fragment ' + pk.index + ' header: Identification ' + fmtId(state.result.identification) + ', offset ' + pk.fragmentOffset + ', MF ' + pk.mf + ', total length ' + pk.totalLength + ' B.';
   }
 
   function hideNext() { $('sim-next').hidden = true; }
@@ -515,6 +520,7 @@
       var v = Number($('sim-speed').value);
       setSpeedUi(v);
       if (has('Animation', 'setSpeed')) VLab.Animation.setSpeed(v);
+      if (VLab.Settings && VLab.Settings.get().speed !== v) VLab.Settings.set({ speed: v });
     });
     Array.prototype.forEach.call(document.querySelectorAll('.speed-presets [data-speed]'), function (b) {
       b.addEventListener('click', function () {
@@ -523,8 +529,10 @@
         slider.dispatchEvent(new Event('input', { bubbles: true }));
       });
     });
+    $('sim-speed').value = setting('speed', 1);
     setSpeedUi(Number($('sim-speed').value));
     if (has('Animation', 'init')) VLab.Animation.init({ onEvent: onAnimEvent, onState: onAnimState });
+    if (has('Animation', 'setSpeed')) VLab.Animation.setSpeed(Number($('sim-speed').value));
     onAnimState('idle');
   }
 
@@ -547,7 +555,7 @@
     addStat(dl, 'Original payload', result.originalPayloadSize + ' B');
     addStat(dl, 'Max fragment payload', result.maxFragmentPayload + ' B');
     addStat(dl, 'DF flag', p.df);
-    addStat(dl, 'Identification', result.identification);
+    addStat(dl, 'Identification', fmtId(result.identification));
     addStat(dl, 'Packets forwarded', result.packets.length);
     if (result.stats) {
       addStat(dl, 'Fragments', result.stats.fragmentCount);
@@ -606,7 +614,7 @@
     var last = r.fragments[n - 1];
     return 'The ' + p.datagramSize + '-byte datagram exceeded the ' + p.mtu + '-byte MTU, so the router split its ' + r.originalPayloadSize +
       '-byte payload into ' + n + ' fragments. Each non-final fragment carries ' + r.maxFragmentPayload + ' bytes, a multiple of 8, and the final fragment carries ' +
-      last.payloadLength + ' bytes with MF = 0. All fragments share Identification ' + r.identification + '. The destination can rebuild the original datagram only when every byte range from 0 to ' +
+      last.payloadLength + ' bytes with MF = 0. All fragments share Identification ' + fmtId(r.identification) + '. The destination can rebuild the original datagram only when every byte range from 0 to ' +
       (r.originalPayloadSize - 1) + ' has arrived before the reassembly timer expires.';
   }
 
@@ -647,7 +655,7 @@
     stopSequence();
     var packets = result.packets.slice();
     state.re = {
-      reassembler: new Reasm.Reassembler(),
+      reassembler: new Reasm.Reassembler({ timeoutMs: setting('timeout', 15) * 1000 }),
       packets: packets,
       lost: {}, delivered: {}, accepted: [], dup: {},
       queue: [], clock: 0, last: null, message: '', token: 0, sequenceTimer: null
@@ -1059,8 +1067,25 @@
   // ---------------------------------------------------------------------
   // Start-up
   // ---------------------------------------------------------------------
+  var DEFAULT_PARAMS = { datagramSize: 4000, mtu: 1500, headerLength: 20, df: 0 };
+
+  /** Settings > Reset experiment values */
+  function resetParams() {
+    writeParams(DEFAULT_PARAMS);
+    storageSet('vlab.params', DEFAULT_PARAMS);
+    clearScenarioHighlight();
+    updatePreview();
+  }
+
+  function paintTimeoutNote() {
+    var n = $('re-timeout-text');
+    if (n) n.textContent = setting('timeout', 15) + ' s';
+  }
+
   function init() {
     initNavigation();
+    paintTimeoutNote();
+    if (VLab.Settings) VLab.Settings.onChange(paintTimeoutNote);
     initSetup();
     initSimulation();
     initReassemblyControls();
@@ -1081,6 +1106,7 @@
     runSimulation: runSimulation,
     startSimulation: function () { return runSimulation({ target: 'simulation' }); },
     loadScenario: loadScenario,
+    resetParams: resetParams,
     getState: function () { return state; }
   };
 

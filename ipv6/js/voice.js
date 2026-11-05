@@ -44,7 +44,7 @@
     panel.id = 'v6-voice-panel'; panel.className = 'voice-panel';
     panel.innerHTML = '<details class="voice-details" id="v6-voice-details">' +
       '<summary class="voice-summary"><span class="voice-summary-icon" aria-hidden="true">♫</span><span class="voice-summary-copy"><strong>IPv6 Voice assistant</strong><small>Listen &amp; ask the lab</small></span><span class="voice-summary-chevron" aria-hidden="true">⌄</span></summary>' +
-      '<div class="voice-content"><div class="voice-head"><span>Speech controls</span><label class="switch"><input type="checkbox" id="v6-voice-toggle"><span>On</span></label></div>' +
+      '<div class="voice-content"><div class="voice-head"><span>Speech controls</span><label class="switch"><input type="checkbox" id="v6-voice-toggle"><span id="v6-voice-state">Off</span></label></div>' +
       '<label class="v6-voice-label" for="v6-voice-select">Narrator voice</label><select id="v6-voice-select" class="v6-voice-select" aria-label="Narrator voice"></select>' +
       '<div class="voice-buttons"><button id="v6-voice-play" type="button">Play</button><button id="v6-voice-pause" type="button" disabled>Pause</button><button id="v6-voice-resume" type="button" disabled>Resume</button><button id="v6-voice-repeat" type="button" disabled>Repeat</button></div>' +
       '<div class="voice-commands" aria-label="IPv6 voice commands"><button data-v6-command="fragmentation">Explain IPv6 fragmentation</button><button data-v6-command="router">Explain router behaviour</button><button data-v6-command="header">Explain Fragment Header</button><button data-v6-command="offset">Explain fragment offset and M flag</button><button data-v6-command="identification">Explain Identification</button><button data-v6-command="pmtu">Explain Path MTU Discovery</button><button data-v6-command="reassembly">Explain destination reassembly</button><button data-v6-command="start">Start IPv6 simulation</button><button id="v6-voice-mic" type="button">Speak a command</button></div>' +
@@ -120,10 +120,10 @@
     buildPanel();
     var toggle = $('v6-voice-toggle');
     try { enabled = localStorage.getItem(KEY) === 'true'; } catch (e) {}
-    toggle.checked = enabled;
+    toggle.checked = enabled; $('v6-voice-state').textContent = enabled ? 'On' : 'Off';
     if (!synth || !Utter) { toggle.disabled = true; setNote('Speech synthesis is not supported in this browser.'); }
     chooseVoice(); if (synth && synth.addEventListener) synth.addEventListener('voiceschanged', chooseVoice);
-    toggle.addEventListener('change', function () { enabled = toggle.checked; try { localStorage.setItem(KEY, String(enabled)); } catch (e) {} if (!enabled && synth) { synth.cancel(); paused = false; setNote('Voice is off.'); } else speak('IPv6 voice assistant on.'); updateButtons(); });
+    toggle.addEventListener('change', function () { enabled = toggle.checked; $('v6-voice-state').textContent = enabled ? 'On' : 'Off'; try { localStorage.setItem(KEY, String(enabled)); } catch (e) {} if (!enabled && synth) { synth.cancel(); paused = false; setNote('Voice is off.'); } else speak('IPv6 voice assistant on.'); updateButtons(); });
     $('v6-voice-select').addEventListener('change', function () { voice = (synth.getVoices() || []).find(function (v) { return v.name === this.value; }, this) || null; try { localStorage.setItem(VOICE_KEY, this.value); } catch (e) {} if (enabled) speak('Narrator voice updated.'); });
     $('v6-voice-play').addEventListener('click', playPage);
     $('v6-voice-pause').addEventListener('click', function () { if (synth && enabled) { synth.pause(); paused = true; updateButtons(); } });

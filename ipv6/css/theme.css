@@ -1,0 +1,65 @@
+/* Experiment 05 (IPv6) colour system. Everything is driven by one hue (--h) so the accent can be changed in Settings. */
+html { --h: 160; }
+html[data-accent="green"]  { --h: 160; }
+html[data-accent="teal"]   { --h: 186; }
+html[data-accent="blue"]   { --h: 221; }
+html[data-accent="violet"] { --h: 262; }
+
+html, html[data-theme="light"] {
+  --bg: hsl(var(--h) 30% 95%); --bg-grad: radial-gradient(1200px 520px at 85% -120px, hsl(var(--h) 80% 45% / .13), transparent 60%);
+  --surface-2: hsl(var(--h) 30% 97.5%); --surface-3: hsl(var(--h) 26% 92%); --glass: hsl(var(--h) 30% 95% / .85);
+  --line: hsl(var(--h) 22% 88%); --line-strong: hsl(var(--h) 20% 80%);
+  --ink: hsl(var(--h) 45% 8%); --ink-2: hsl(var(--h) 22% 20%); --muted: hsl(var(--h) 12% 38%); --faint: hsl(var(--h) 10% 55%);
+  --accent: hsl(var(--h) 84% 32%); --accent-2: hsl(var(--h) 78% 40%); --accent-ink: #ffffff;
+  --accent-soft: hsl(var(--h) 84% 32% / .10); --accent-line: hsl(var(--h) 84% 32% / .40);
+  /* scene colours (always dark) */
+  --d-side-1: hsl(var(--h) 66% 9.5%); --d-side-2: hsl(var(--h) 72% 6.5%); --d-hero: hsl(var(--h) 76% 8%);
+  --d-node: hsl(var(--h) 62% 10.5%); --d-node-on: hsl(var(--h) 55% 16%); --d-line: hsl(var(--h) 42% 33%);
+  --d-text: hsl(var(--h) 28% 66%); --d-bright: hsl(var(--h) 86% 72%); --d-glow: hsl(var(--h) 80% 52%); --d-edge: hsl(var(--h) 55% 19%);
+  --acc-a: hsl(var(--h) 80% 40%); --acc-b: hsl(var(--h) 70% 52%); --acc-c: hsl(var(--h) 88% 76%);
+}
+html[data-theme="dark"] {
+  --bg: hsl(var(--h) 55% 4.5%); --bg-grad: radial-gradient(1100px 520px at 85% -140px, hsl(var(--h) 75% 50% / .16), transparent 60%);
+  --surface: hsl(var(--h) 46% 7.5%); --surface-2: hsl(var(--h) 40% 10%); --surface-3: hsl(var(--h) 38% 14%); --glass: hsl(var(--h) 55% 5% / .8);
+  --line: hsl(var(--h) 38% 15%); --line-strong: hsl(var(--h) 30% 23%);
+  --ink: hsl(var(--h) 60% 95%); --ink-2: hsl(var(--h) 30% 82%); --muted: hsl(var(--h) 18% 66%); --faint: hsl(var(--h) 12% 50%);
+  --accent: hsl(var(--h) 65% 54%); --accent-2: hsl(var(--h) 76% 72%); --accent-ink: hsl(var(--h) 80% 7%);
+  --accent-soft: hsl(var(--h) 65% 54% / .14); --accent-line: hsl(var(--h) 65% 54% / .45);
+}
+
+.sidebar, html[data-theme="dark"] .sidebar { background: linear-gradient(180deg, var(--d-side-1) 0%, var(--d-side-2) 100%); }
+.brand-mark { background: linear-gradient(135deg, var(--acc-a), var(--acc-b)); box-shadow: 0 8px 22px -6px hsl(var(--h) 80% 40% / .7); }
+.brand-text strong b, .sidebar-course-meta, .nav-btn-ext { color: var(--acc-c); }
+.nav-btn.active { background: linear-gradient(90deg, hsl(var(--h) 70% 52% / .30), hsl(var(--h) 70% 52% / .10)); }
+.nav-btn.active::before { background: var(--acc-a); box-shadow: 0 6px 16px -4px hsl(var(--h) 80% 45% / .8); }
+.nav-btn:focus-visible { outline-color: var(--acc-c); }
+.hero-home { background: radial-gradient(700px 360px at 100% 0%, hsl(var(--h) 80% 42% / .45), transparent 65%), radial-gradient(560px 320px at 0% 110%, hsl(calc(var(--h) + 40) 90% 60% / .16), transparent 65%), var(--d-hero); }
+.hero-home .meta { color: var(--acc-c); } .hero-home h1 em { color: hsl(var(--h) 80% 84%); } .hero-home .lead { color: hsl(var(--h) 30% 78%); } .hero-assurance { color: hsl(var(--h) 30% 68%); }
+.hs-node rect { fill: var(--d-node); } .hs-wire { stroke: hsl(var(--h) 40% 40%); }
+.topology { border-color: var(--d-edge); background: radial-gradient(800px 320px at 50% 0%, hsl(var(--h) 80% 42% / .22), transparent 70%), var(--d-hero); }
+#sec-simulation[data-sim-state="running"] .topology { border-color: var(--acc-a); box-shadow: var(--shadow-3), 0 0 0 1px hsl(var(--h) 70% 52% / .35); }
+.node .base { fill: var(--d-node); } .node.active .base { fill: var(--d-node-on); stroke: var(--d-bright); filter: drop-shadow(0 0 12px hsl(var(--h) 85% 70% / .6)); }
+.wire { stroke: var(--d-line); } .link-label, .cap, .buf-label, .topology figcaption { fill: var(--d-text); color: var(--d-text); }
+.buf-bg { stroke: var(--d-line); }
+.pkt.original rect { fill: var(--acc-a); } .pkt.original text { fill: #fff; }
+.home-diagram .pk-big { fill: var(--acc-a); }
+progress::-webkit-progress-value { background: linear-gradient(90deg, var(--acc-b), var(--accent), var(--accent-2)); }
+progress::-moz-progress-bar { background: var(--accent); }
+.cmdk { background-color: hsl(var(--h) 60% 4% / .65); }
+.hf.selected { box-shadow: 0 0 0 2px var(--accent), 0 10px 22px -10px var(--accent); }
+.hf.frag { border-color: hsl(var(--h) 70% 45% / .55); background: hsl(var(--h) 70% 45% / .12); }
+.hf.frag .name { color: var(--accent); }
+html[data-theme="dark"] .hf.frag .name { color: var(--acc-c); }
+.stage-chip[data-tone="step"] { border-color: var(--accent-line); background: var(--accent-soft); color: var(--accent); }
+.reading-progress span { background: linear-gradient(90deg, var(--acc-a), var(--acc-b), hsl(calc(var(--h) + 40) 90% 60%)); }
+input[type="range"]::-webkit-slider-thumb { border-color: var(--accent); }
+.pkt.rebuilt rect { fill: var(--acc-b); filter: drop-shadow(0 0 9px var(--acc-b)); }
+
+/* High contrast */
+html[data-contrast="high"] { --line: hsl(var(--h) 20% 62%); --line-strong: hsl(var(--h) 25% 38%); --muted: hsl(var(--h) 25% 22%); --faint: hsl(var(--h) 20% 32%); }
+html[data-contrast="high"][data-theme="dark"] { --line: hsl(var(--h) 25% 45%); --line-strong: hsl(var(--h) 30% 62%); --muted: hsl(var(--h) 25% 84%); --faint: hsl(var(--h) 20% 74%); }
+html[data-contrast="high"] .card, html[data-contrast="high"] .hf, html[data-contrast="high"] .btn { border-width: 1.5px; }
+
+/* Text size */
+html[data-text="small"] { font-size: 14.4px; } html[data-text="large"] { font-size: 18px; }
+html[data-text="small"] body { font-size: 14.4px; } html[data-text="large"] body { font-size: 17.6px; }

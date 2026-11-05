@@ -104,46 +104,6 @@ table.data td.wrap { white-space: normal; font-family: var(--font); }
 .buf-seg.placed { stroke: #fff; stroke-width: 1.4; }
 .hf.addr { min-height: 38px; flex-direction: row; gap: 14px; justify-content: space-between; padding: 6px 16px; }
 
-/* ───────── V3.1 green identity for Experiment 05 ───────── */
-:root {
-  --bg: #f0f7f4; --bg-grad: radial-gradient(1200px 520px at 85% -120px, rgba(20, 184, 140, .13), transparent 60%);
-  --surface-2: #f5faf8; --surface-3: #e6f1ed; --glass: rgba(240, 247, 244, .85);
-  --line: #dbe8e3; --line-strong: #c3d7cf; --ink: #0b1f1a; --ink-2: #27403a; --muted: #5d7770; --faint: #86a098;
-  --accent: #0e9f77; --accent-2: #14b88a; --accent-ink: #ffffff;
-  --accent-soft: rgba(14, 159, 119, .10); --accent-line: rgba(14, 159, 119, .40);
-}
-html[data-theme="dark"] {
-  --bg: #06120f; --bg-grad: radial-gradient(1100px 520px at 85% -140px, rgba(40, 214, 160, .16), transparent 60%);
-  --surface: #0b1a16; --surface-2: #10231e; --surface-3: #16302a; --glass: rgba(6, 18, 15, .8);
-  --line: #1a332c; --line-strong: #27483f; --ink: #e9fbf5; --ink-2: #c3e0d6; --muted: #8fb2a6; --faint: #6b8c80;
-  --accent: #34d3a4; --accent-2: #7cecc6; --accent-ink: #04201a;
-  --accent-soft: rgba(52, 211, 164, .14); --accent-line: rgba(52, 211, 164, .45);
-}
-.sidebar, html[data-theme="dark"] .sidebar { background: linear-gradient(180deg, #082320 0%, #05171a 100%); }
-.brand-mark { background: linear-gradient(135deg, #12b886, #2dd4a0); box-shadow: 0 8px 22px -6px rgba(18, 184, 134, .7); }
-.brand-text strong b, .sidebar-course-meta, .nav-btn-ext { color: #6ee7c0; }
-.nav-btn.active { background: linear-gradient(90deg, rgba(45, 212, 160, .30), rgba(45, 212, 160, .10)); }
-.nav-btn.active::before { background: #14b88a; box-shadow: 0 6px 16px -4px rgba(20, 184, 138, .8); }
-.nav-btn:focus-visible { outline-color: #6ee7c0; }
-.hero-home { background: radial-gradient(700px 360px at 100% 0%, rgba(20, 184, 138, .45), transparent 65%), radial-gradient(560px 320px at 0% 110%, rgba(47, 183, 255, .16), transparent 65%), #06231e; }
-.hero-home .meta { color: #6ee7c0; } .hero-home h1 em { color: #a6f0d8; } .hero-home .lead { color: #b3d9ce; } .hero-assurance { color: #8fc2b3; }
-.hs-node rect { fill: #0d2f29; } .hs-wire { stroke: #3a8a78; }
-.topology { border-color: #1b4a40; background: radial-gradient(800px 320px at 50% 0%, rgba(20, 184, 138, .22), transparent 70%), #06201c; }
-#sec-simulation[data-sim-state="running"] .topology { border-color: #1fa17f; box-shadow: var(--shadow-3), 0 0 0 1px rgba(45, 212, 160, .35); }
-.node .base { fill: #0b2b25; } .node.active .base { fill: #104038; stroke: #7cf0cb; filter: drop-shadow(0 0 12px rgba(124, 240, 203, .6)); }
-.wire { stroke: #2f7d6c; } .link-label, .cap, .buf-label, .topology figcaption { fill: #8fc2b3; color: #8fc2b3; }
-.buf-bg { stroke: #2f7d6c; }
-.pkt.original rect { fill: #14a37f; } .pkt.original text { fill: #fff; }
-.home-diagram .pk-big { fill: #14a37f; }
-progress::-webkit-progress-value { background: linear-gradient(90deg, #2dd4a0, var(--accent), var(--accent-2)); }
-.video-wrap, .cmdk { background-color: rgba(3, 14, 12, .65); }
-.hf.selected { box-shadow: 0 0 0 2px var(--accent), 0 10px 22px -10px var(--accent); }
-.hf.frag { border-color: rgba(20, 184, 138, .55); background: rgba(20, 184, 138, .12); }
-.hf.frag .name { color: var(--accent); }
-html[data-theme="dark"] .hf.frag .name { color: #6ee7c0; }
-.stage-chip[data-tone="step"] { border-color: var(--accent-line); background: var(--accent-soft); color: var(--accent); }
-.reading-progress span { background: linear-gradient(90deg, #14b88a, #2dd4a0, #2fb7ff); }
-input[type="range"]::-webkit-slider-thumb { border-color: var(--accent); }
 .hf.addr { padding: 6px 4px; flex-direction: column; min-height: 54px; gap: 3px; }
 .hf.addr .val { font-size: .86rem; }
 .hf.addr .name { font-size: .66rem; }
@@ -153,7 +113,6 @@ input[type="range"]::-webkit-slider-thumb { border-color: var(--accent); }
 .ipv4-hdr { padding: 20px 18px; }
 .hf { min-height: 66px; }
 .bit-ruler { margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
-
 
 /* IPv6 voice assistant — collapsible sidebar module */
 .v6-voice-panel{margin:14px 12px 18px;position:relative;z-index:5;flex:0 0 auto}

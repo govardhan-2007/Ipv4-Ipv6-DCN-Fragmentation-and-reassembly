@@ -8,16 +8,27 @@
 <meta name="description" content="Interactive Data Communication and Networking virtual laboratory for IPv4 fragmentation, packet inspection and reassembly.">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <script>
+  /* Apply saved settings before first paint so the page never flashes the wrong theme or sidebar. */
   (function () {
+    var d = document.documentElement;
     try {
-      var savedTheme = localStorage.getItem('dcn-vlab-theme');
-      document.documentElement.setAttribute('data-theme', savedTheme === 'dark' ? 'dark' : 'light');
+      var s = JSON.parse(localStorage.getItem('dcn-vlab-ipv4-settings-v1') || '{}');
+      var t = s.theme || localStorage.getItem('dcn-vlab-theme') || 'light';
+      if (t === 'system') t = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      d.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
+      d.setAttribute('data-accent', s.accent || 'indigo');
+      d.setAttribute('data-text', s.text || 'medium');
+      d.setAttribute('data-contrast', s.contrast || 'normal');
+      var m = s.motion || 'system';
+      d.setAttribute('data-motion', m === 'on' || (m === 'system' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) ? 'reduce' : 'full');
+      d.setAttribute('data-sidebar', s.sidebar || 'expanded');
     } catch (error) {
-      document.documentElement.setAttribute('data-theme', 'light');
+      d.setAttribute('data-theme', 'light'); d.setAttribute('data-accent', 'indigo'); d.setAttribute('data-sidebar', 'expanded');
     }
   }());
 </script>
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/settings.css">
 <script>
   /* Lab configuration. To add the demo video, set ONE of these (see README):
      videoSrc: "assets/videos/demo.mp4"   (local file)
@@ -33,6 +44,8 @@
 
   <!-- ===== Sidebar navigation ===== -->
   <nav class="sidebar" id="sidebar" aria-label="Lab sections">
+    <button class="sb-close" id="sb-close" type="button" aria-label="Close menu">×</button>
+    <button class="sb-collapse" id="sb-collapse" type="button" aria-label="Collapse sidebar to icons" aria-expanded="true" title="Collapse sidebar"><span aria-hidden="true">‹</span></button>
     <div class="brand">
       <span class="brand-mark" aria-hidden="true"><span></span></span>
       <span class="brand-text"><strong>DCN <b>V-LAB</b></strong><small>Engineering learning environment</small></span>
@@ -40,26 +53,29 @@
     <div class="sidebar-course">
       <span class="sidebar-course-label">Course module</span>
       <strong>Data Communication<br>&amp; Networking</strong>
-      <span class="sidebar-course-meta">Network layer <i></i> Experiments 04 &amp; 05</span>
+      <span class="sidebar-course-meta">Network layer <i></i> Experiments 04 </span>
     </div>
-    <ul class="nav-list">
-      <li class="nav-label">Learn</li>
-      <li><button class="nav-btn active" data-section="home" data-index="01">Overview</button></li>
-      <li><button class="nav-btn" data-section="theory" data-index="02">Theory and concepts</button></li>
-      <li class="nav-label">Experiment workspace</li>
-      <li><button class="nav-btn" data-section="setup" data-index="03">Experiment setup</button></li>
-      <li><button class="nav-btn" data-section="simulation" data-index="04">Live simulation</button></li>
-      <li><button class="nav-btn" data-section="inspector" data-index="05">Packet header inspector</button></li>
-      <li><button class="nav-btn" data-section="reassembly" data-index="06">Reassembly lab</button></li>
-      <li><button class="nav-btn" data-section="results" data-index="07">Results and analysis</button></li>
-      <li><a class="nav-btn nav-btn-ipv6" href="ipv6/index.html" data-index="08">IPv6 fragmentation lab <span class="nav-external-mark" aria-hidden="true">↗</span></a></li>
-      <li class="nav-label">Assessment &amp; resources</li>
-      <li><button class="nav-btn" data-section="quiz" data-index="09">Knowledge check</button></li>
-      <li><button class="nav-btn" data-section="resources" data-index="10">Video and references</button></li>
+    <ul class="nav-list" id="nav-list">
+      <li class="nav-label nav-group-head" data-group="learn"><button type="button" class="nav-toggle" aria-expanded="true">Learn<span class="chev" aria-hidden="true"></span></button></li>
+      <li data-group="learn"><button class="nav-btn active" data-section="home" data-index="01" title="Overview">Overview</button></li>
+      <li data-group="learn"><button class="nav-btn" data-section="theory" data-index="02" title="Theory and concepts">Theory and concepts</button></li>
+      <li class="nav-label nav-group-head" data-group="lab"><button type="button" class="nav-toggle" aria-expanded="true">Experiment workspace<span class="chev" aria-hidden="true"></span></button></li>
+      <li data-group="lab"><button class="nav-btn" data-section="setup" data-index="03" title="Experiment setup">Experiment setup</button></li>
+      <li data-group="lab"><button class="nav-btn" data-section="simulation" data-index="04" title="Live simulation">Live simulation</button></li>
+      <li data-group="lab"><button class="nav-btn" data-section="inspector" data-index="05" title="Packet header inspector">Packet header inspector</button></li>
+      <li data-group="lab"><button class="nav-btn" data-section="reassembly" data-index="06" title="Reassembly lab">Reassembly lab</button></li>
+      <li data-group="lab"><button class="nav-btn" data-section="results" data-index="07" title="Results and analysis">Results and analysis</button></li>
+      <li class="nav-label nav-group-head" data-group="assess"><button type="button" class="nav-toggle" aria-expanded="true">Assessment &amp; resources<span class="chev" aria-hidden="true"></span></button></li>
+      <li data-group="assess"><button class="nav-btn" data-section="quiz" data-index="08" title="Knowledge check">Knowledge check</button></li>
+      <li data-group="assess"><button class="nav-btn" data-section="resources" data-index="09" title="Video and references">Video and references</button></li>
+      <li class="nav-label nav-group-head" data-group="prefs"><button type="button" class="nav-toggle" aria-expanded="true">Preferences<span class="chev" aria-hidden="true"></span></button></li>
+      <li data-group="prefs"><button class="nav-btn" data-section="settings" data-index="10" title="Settings">Settings</button></li>
+      <li class="nav-label nav-group-head" data-group="other"><button type="button" class="nav-toggle" aria-expanded="true">Other experiment<span class="chev" aria-hidden="true"></span></button></li>
+      <li data-group="other"><a class="nav-btn nav-btn-ipv6" href="ipv6/index.html" data-index="E5" title="IPv6 fragmentation lab">IPv6 fragmentation lab <span class="nav-external-mark" aria-hidden="true">↗</span></a></li>
     </ul>
     <div class="sidebar-foot">
       <span class="sidebar-foot-mark" aria-hidden="true">✓</span>
-      <div><strong>Ready for self-study</strong><small>Runs in a modern browser</small></div>
+      <div><strong id="sb-progress-title">Ready for self-study</strong><small id="sb-progress-sub">Runs in a modern browser</small></div>
     </div>
 
     <!-- Compact, collapsible voice assistant -->
@@ -90,6 +106,7 @@
   <main class="content" id="main" tabindex="-1">
     <header class="portal-header" aria-label="Virtual laboratory header">
       <div class="portal-breadcrumb">
+        <button class="sb-toggle" id="sb-toggle" type="button" aria-controls="sidebar" aria-expanded="true" aria-label="Hide sidebar" title="Hide or show the sidebar (B)"><span class="sb-toggle-bars" aria-hidden="true"></span></button>
         <span class="portal-brand-tag">V-LAB</span>
         <span class="breadcrumb-course">Data Communication &amp; Networking</span>
         <span class="breadcrumb-separator" aria-hidden="true">/</span>
@@ -102,6 +119,7 @@
           <span class="theme-toggle-label">Dark mode</span>
           <span class="theme-toggle-track" aria-hidden="true"><span></span></span>
         </button>
+        <button class="icon-btn" id="settings-open" type="button" data-goto="settings" aria-label="Settings" title="Settings (0)"><span aria-hidden="true">⚙</span></button>
         <div class="portal-status"><span class="portal-status-dot" aria-hidden="true"></span><span>Interactive module</span><i></i><span id="portal-experiment-label">Experiment 04</span></div>
       </div>
       <div class="reading-progress" id="reading-progress" aria-hidden="true"><span id="reading-progress-fill"></span></div>
@@ -362,8 +380,8 @@
       <p class="shortcut-hint">Shortcuts: <kbd>Space</kbd> start, pause or resume &nbsp; <kbd>→</kbd> step &nbsp; <kbd>R</kbd> reset</p>
 
       <div class="grid-2">
-        <article class="card"><h2>Calculation steps</h2><ol id="sim-workings" class="workings"><li class="hint">Press Start to see each calculation.</li></ol></article>
-        <article class="card"><h2>Event log</h2><ul id="sim-log" class="log" aria-live="polite"></ul></article>
+        <article class="card" id="card-workings"><h2>Calculation steps</h2><ol id="sim-workings" class="workings"><li class="hint">Press Start to see each calculation.</li></ol></article>
+        <article class="card" id="card-log"><h2>Event log</h2><ul id="sim-log" class="log" aria-live="polite"></ul></article>
       </div>
     </section>
 
@@ -410,7 +428,7 @@
         <p id="re-status" class="status-badge" aria-live="polite">Waiting for fragments.</p>
         <p id="re-missing" class="hint"></p>
         <p id="re-timer" class="hint"></p>
-        <p id="re-note" class="hint">Incomplete datagrams are discarded when the reassembly timer expires (15 s in this lab, RFC 791).</p>
+        <p id="re-note" class="hint">Incomplete datagrams are discarded when the reassembly timer expires (<span id="re-timeout-text">15 s</span> in this lab; RFC 791 suggests 15 s).</p>
       </article>
     </section>
 
@@ -572,12 +590,53 @@
       </article>
     </section>
 
+    <!-- ===== 10. Settings ===== -->
+    <section class="lab-section" id="sec-settings" aria-labelledby="h-settings">
+      <h1 id="h-settings">Settings</h1>
+      <p class="lead">Changes apply immediately and are saved in this browser only. Appearance and sidebar settings apply to the whole IPv4 lab.</p>
+      <article class="card settings-card"><h2>Appearance</h2>
+        <div class="setting-row"><div class="setting-text"><strong>Theme</strong><p>Light, dark, or follow your device setting.</p></div><div class="setting-control"><div class="seg" role="radiogroup" data-setting="theme"><button type="button" role="radio" aria-checked="false" data-value="light">Light</button><button type="button" role="radio" aria-checked="false" data-value="dark">Dark</button><button type="button" role="radio" aria-checked="false" data-value="system">System</button></div></div></div>
+        <div class="setting-row"><div class="setting-text"><strong>Accent colour</strong><p>The colour used for buttons, highlights, sliders and the sidebar.</p></div><div class="setting-control"><div class="swatches" role="radiogroup" data-setting="accent" aria-label="Accent colour"><button type="button" role="radio" aria-checked="false" data-value="indigo" class="sw-indigo" aria-label="Indigo" title="Indigo"></button><button type="button" role="radio" aria-checked="false" data-value="teal" class="sw-teal" aria-label="Teal" title="Teal"></button><button type="button" role="radio" aria-checked="false" data-value="green" class="sw-green" aria-label="Green" title="Green"></button><button type="button" role="radio" aria-checked="false" data-value="violet" class="sw-violet" aria-label="Violet" title="Violet"></button></div></div></div>
+        <div class="setting-row"><div class="setting-text"><strong>Text size</strong><p>Scales text and spacing across the IPv4 lab.</p></div><div class="setting-control"><div class="seg" role="radiogroup" data-setting="text"><button type="button" role="radio" aria-checked="false" data-value="small">Small</button><button type="button" role="radio" aria-checked="false" data-value="medium">Medium</button><button type="button" role="radio" aria-checked="false" data-value="large">Large</button></div></div></div>
+        <div class="setting-row"><div class="setting-text"><strong>High contrast</strong><p>Stronger borders and darker secondary text for easier reading.</p></div><div class="setting-control"><label class="tgl"><input type="checkbox" data-setting="contrastHigh" aria-label="High contrast"><span class="tgl-track" aria-hidden="true"></span></label></div></div>
+        <div class="setting-row"><div class="setting-text"><strong>Reduce motion</strong><p>Turns off decorative animation. The packet journey keeps playing, with its own speed control. System follows your device.</p></div><div class="setting-control"><div class="seg" role="radiogroup" data-setting="motion"><button type="button" role="radio" aria-checked="false" data-value="system">System</button><button type="button" role="radio" aria-checked="false" data-value="on">On</button><button type="button" role="radio" aria-checked="false" data-value="off">Off</button></div></div></div>
+      </article>
+      <article class="card settings-card"><h2>Sidebar</h2>
+        <div class="setting-row"><div class="setting-text"><strong>Sidebar mode</strong><p>Expanded shows labels, Compact shows only the page numbers, Hidden gives the page the full width. Press <kbd>B</kbd> to hide or show it.</p></div><div class="setting-control"><div class="seg" role="radiogroup" data-setting="sidebar"><button type="button" role="radio" aria-checked="false" data-value="expanded">Expanded</button><button type="button" role="radio" aria-checked="false" data-value="compact">Compact</button><button type="button" role="radio" aria-checked="false" data-value="hidden">Hidden</button></div></div></div>
+        <div class="setting-row"><div class="setting-text"><strong>Remember collapsed menu groups</strong><p>Keep the groups you close in the menu closed on the next visit.</p></div><div class="setting-control"><label class="tgl"><input type="checkbox" data-setting="rememberGroups" aria-label="Remember collapsed groups"><span class="tgl-track" aria-hidden="true"></span></label></div></div>
+        <div class="setting-row"><div class="setting-text"><strong>Show course card</strong><p>The course name card at the top of the sidebar.</p></div><div class="setting-control"><label class="tgl"><input type="checkbox" data-setting="showCourse" aria-label="Show course card"><span class="tgl-track" aria-hidden="true"></span></label></div></div>
+        <div class="setting-row"><div class="setting-text"><strong>Show voice assistant</strong><p>The voice assistant panel at the bottom of the sidebar.</p></div><div class="setting-control"><label class="tgl"><input type="checkbox" data-setting="showVoice" aria-label="Show voice assistant"><span class="tgl-track" aria-hidden="true"></span></label></div></div>
+        <div class="setting-row"><div class="setting-text"><strong>Menu groups</strong><p>Open every group in the sidebar menu.</p></div><div class="setting-control"><button class="btn" type="button" id="btn-expand-groups">Expand all groups</button></div></div>
+      </article>
+      <article class="card settings-card"><h2>Simulation</h2>
+        <div class="setting-row"><div class="setting-text"><strong>Default playback speed</strong><p>Used when the simulation opens. Changing the speed on the simulation page updates this too.</p></div><div class="setting-control"><div class="range-inline"><input type="range" data-setting="speed" min="0.25" max="3" step="0.25" aria-label="Default speed"><output id="out-speed">1×</output></div></div></div>
+        <div class="setting-row"><div class="setting-text"><strong>Start automatically</strong><p>Begin playing as soon as you press Simulate or pick a scenario.</p></div><div class="setting-control"><label class="tgl"><input type="checkbox" data-setting="autoStart" aria-label="Start automatically"><span class="tgl-track" aria-hidden="true"></span></label></div></div>
+        <div class="setting-row"><div class="setting-text"><strong>Show calculation steps</strong><p>The step-by-step working under the stage.</p></div><div class="setting-control"><label class="tgl"><input type="checkbox" data-setting="showWorkings" aria-label="Show calculation steps"><span class="tgl-track" aria-hidden="true"></span></label></div></div>
+        <div class="setting-row"><div class="setting-text"><strong>Show event log</strong><p>The running log of what happens at each stage.</p></div><div class="setting-control"><label class="tgl"><input type="checkbox" data-setting="showLog" aria-label="Show event log"><span class="tgl-track" aria-hidden="true"></span></label></div></div>
+        <div class="setting-row"><div class="setting-text"><strong>Pause when the tab is hidden</strong><p>Stops the animation while you are on another tab, so you do not miss stages.</p></div><div class="setting-control"><label class="tgl"><input type="checkbox" data-setting="pauseHidden" aria-label="Pause when hidden"><span class="tgl-track" aria-hidden="true"></span></label></div></div>
+        <div class="setting-row"><div class="setting-text"><strong>Keyboard shortcuts</strong><p>Space, arrow keys, R, B, D, / and number keys (0 opens Settings).</p></div><div class="setting-control"><label class="tgl"><input type="checkbox" data-setting="shortcuts" aria-label="Keyboard shortcuts"><span class="tgl-track" aria-hidden="true"></span></label></div></div>
+      </article>
+      <article class="card settings-card"><h2>Protocol values</h2>
+        <div class="setting-row"><div class="setting-text"><strong>Identification format</strong><p>How the 16-bit Identification is shown in the simulation, results and inspector.</p></div><div class="setting-control"><div class="seg" role="radiogroup" data-setting="idFormat"><button type="button" role="radio" aria-checked="false" data-value="dec">Decimal</button><button type="button" role="radio" aria-checked="false" data-value="hex">Hexadecimal</button></div></div></div>
+        <div class="setting-row"><div class="setting-text"><strong>Initial TTL</strong><p>The Time To Live set by the source. The router lowers it by 1. Applies to the next run.</p></div><div class="setting-control"><div class="seg" role="radiogroup" data-setting="ttl"><button type="button" role="radio" aria-checked="false" data-value="64">64</button><button type="button" role="radio" aria-checked="false" data-value="128">128</button><button type="button" role="radio" aria-checked="false" data-value="255">255</button></div></div></div>
+        <div class="setting-row"><div class="setting-text"><strong>Reassembly timeout (seconds)</strong><p>RFC 791 suggests at least 15 seconds. Change it to explore shorter or longer timers in the Reassembly lab. Applies to the next run.</p></div><div class="setting-control"><input type="number" class="num" data-setting="timeout" min="5" max="120" step="1" aria-label="Reassembly timeout in seconds"></div></div>
+      </article>
+      <article class="card settings-card"><h2>Your data</h2>
+        <div class="setting-row"><div class="setting-text"><strong>Export settings</strong><p>Download your settings as a small file.</p></div><div class="setting-control"><button class="btn" type="button" id="btn-export">Export</button></div></div>
+        <div class="setting-row"><div class="setting-text"><strong>Import settings</strong><p>Load settings from a file you exported earlier.</p></div><div class="setting-control"><label class="btn" for="file-import">Import<input type="file" id="file-import" accept="application/json,.json" hidden></label></div></div>
+        <div class="setting-row"><div class="setting-text"><strong>Reset experiment values</strong><p>Back to a 4000-byte datagram, 1500-byte MTU, 20-byte header and DF = 0.</p></div><div class="setting-control"><button class="btn" type="button" id="btn-reset-config">Reset values</button></div></div>
+        <div class="setting-row"><div class="setting-text"><strong>Clear progress</strong><p>Forget which pages you have visited and your best quiz score.</p></div><div class="setting-control"><button class="btn" type="button" id="btn-reset-progress">Clear progress</button></div></div>
+        <div class="setting-row"><div class="setting-text"><strong>Reset all settings</strong><p>Restore every setting on this page to its default.</p></div><div class="setting-control"><button class="btn danger" type="button" id="btn-reset-all">Reset all</button></div></div>
+      </article>
+    </section>
+
     <footer class="portal-footer">
       <div><span class="footer-mark">V</span><div><strong>DCN Virtual Laboratory</strong><small>Experiment 04 · IP Fragmentation and Reassembly</small></div></div>
       <span class="footer-note">An interactive learning resource for Data Communication and Networking</span>
     </footer>
   </main>
 </div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 <!-- Classic scripts (no ES modules) so the lab runs from file:// -->
 <script src="js/checksum.js"></script>
@@ -587,6 +646,7 @@
 <script src="js/packet_inspector.js"></script>
 <script src="js/network_animation.js"></script>
 <script src="js/voice_assistant.js"></script>
+<script src="js/settings.js"></script>
 <script src="js/app.js"></script>
 <script src="js/ui_enhancements.js"></script>
 </body>

@@ -307,6 +307,7 @@
   function renderResult() {
     rootEl.textContent = '';
     var pct = Math.round((score / questions.length) * 100);
+    if (quizMode !== 'ipv6' && window.VLab && VLab.Settings && VLab.Settings.saveQuiz) VLab.Settings.saveQuiz(score, questions.length);
     var msg = pct >= 80 ? 'Excellent. You understand fragmentation and reassembly well.' :
       pct >= 50 ? 'Good effort. Revisit the Theory section and the Reassembly laboratory for the questions you missed.' :
         'Review the Theory section, then run the six scenarios and try again.';
